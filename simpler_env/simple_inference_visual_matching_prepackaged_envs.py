@@ -82,14 +82,14 @@ else:
 success_arr = []
 for ep_id in range(args.n_trajs):
     obs, reset_info = env.reset()
-    instruction = env.get_language_instruction()
+    instruction = env.unwrapped.get_language_instruction()
     # for long-horizon environments, we check if the current subtask is the final subtask
-    is_final_subtask = env.is_final_subtask() 
+    is_final_subtask = env.unwrapped.is_final_subtask() 
 
     model.reset(instruction)
     print(instruction)
 
-    image = get_image_from_maniskill2_obs_dict(env, obs)  # np.ndarray of shape (H, W, 3), uint8
+    image = get_image_from_maniskill2_obs_dict(env.unwrapped, obs)  # np.ndarray of shape (H, W, 3), uint8
     images = [image]
     predicted_terminated, success, truncated = False, False, False
     timestep = 0
@@ -106,15 +106,14 @@ for ep_id in range(args.n_trajs):
         obs, reward, success, truncated, info = env.step(
             np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
         )
-        print(timestep, info)
-        new_instruction = env.get_language_instruction()
+        new_instruction = env.unwrapped.get_language_instruction()
         if new_instruction != instruction:
             # update instruction for long horizon tasks
             instruction = new_instruction
             print(instruction)
-        is_final_subtask = env.is_final_subtask() 
+        is_final_subtask = env.unwrapped.is_final_subtask() 
         # update image observation
-        image = get_image_from_maniskill2_obs_dict(env, obs)
+        image = get_image_from_maniskill2_obs_dict(env.unwrapped, obs)
         images.append(image)
         timestep += 1
 
