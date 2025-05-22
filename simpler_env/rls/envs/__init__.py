@@ -1,5 +1,5 @@
 import simpler_env
-from simpler_env.rls.envs.wrappers import SimplerEnvRGBObservation, DMEnvWrapper
+from simpler_env.rls.envs.wrappers import SimplerEnvRGBObservation
 
 
 def make_env(env_config):
