@@ -8,6 +8,7 @@ from ray.rllib.algorithms.ppo import  PPOConfig
 import simpler_env
 from simpler_env.rls.envs import make_env
 from simpler_env.rls.utils import make_logger
+from simpler_env.rls.callbacks import WandbCallback
 
 
 def main():
@@ -49,6 +50,7 @@ def main():
                 "conv_activation": "relu",
             }
         )
+        .callbacks(WandbCallback)
     )
 
     algo = config.build_algo(
