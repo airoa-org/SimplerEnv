@@ -3,7 +3,7 @@ import numpy as np
     
 
 class SimplerEnvRGBObservation(gym.ObservationWrapper):
-    def __init__(self, env, camera_type: str = "base_camera"):
+    def __init__(self, env, camera_type: str = "overhead_camera"):
         super().__init__(env)
 
         assert camera_type in ["base_camera", "overhead_camera"]
