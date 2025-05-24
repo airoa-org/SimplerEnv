@@ -62,7 +62,7 @@ def main():
         print(f"TIME: {(time.time() - s)/60:.2f} [min]")
 
         if (i+1) % 50 == 0:
-            checkpoint = algo.save(f"{LOG_DIR}/{timestr}")
+            checkpoint = algo.save(f"{LOG_DIR}/{timestr}/checkpoints")
             print("saved to", checkpoint)
 
     algo.stop()
