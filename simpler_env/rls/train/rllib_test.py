@@ -4,11 +4,13 @@ from datetime import datetime
 import ray
 from ray.tune.registry import register_env
 from ray.rllib.algorithms.ppo import  PPOConfig
+from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 
 import simpler_env
 from simpler_env.rls.envs import make_env
 from simpler_env.rls.utils import make_logger
 from simpler_env.rls.callbacks import WandbCallback
+from simpler_env.rls.modules import Pi0PPOTorchRLModule
 
 
 def main():
@@ -41,14 +43,10 @@ def main():
         )
         .env_runners(num_env_runners=0)
         .rl_module(
-            model_config={
-                "conv_filters": [
-                    [32, [8, 8], 4],
-                    [64, [4, 4], 2],
-                    [64, [3, 3], 2],
-                ],
-                "conv_activation": "relu",
-            }
+            rl_module_spec=RLModuleSpec(
+                module_class=Pi0PPOTorchRLModule,
+                model_config={},
+            ),
         )
         .callbacks(WandbCallback)
     )
