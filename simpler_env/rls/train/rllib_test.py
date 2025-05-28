@@ -41,8 +41,8 @@ def main():
             env="SimplerEnv", 
             env_config={
                 "env_id": ENV_ID,
-                "simpler_env_rgb_observation_wrapper": False,
-                "lerobot_pi0_wrapper": True,
+                "simpler_env_rgb_observation_wrapper": True,
+                # "lerobot_pi0_wrapper": True,
                 "policy_setup": POLICY_SETUP,
             },
         )
@@ -65,14 +65,22 @@ def main():
             num_gpus_per_env_runner=1,
         )
         .rl_module(
-            rl_module_spec=RLModuleSpec(
-                module_class=Pi0PPOTorchRLModule,
-                model_config={
-                    "policy_setup": POLICY_SETUP,
-                    "image_size": IMAGE_SIZE,
-                    "action_scale": ACTION_SCALE,
-                },
-            ),
+        #     rl_module_spec=RLModuleSpec(
+        #         module_class=Pi0PPOTorchRLModule,
+        #         model_config={
+        #             "policy_setup": POLICY_SETUP,
+        #             "image_size": IMAGE_SIZE,
+        #             "action_scale": ACTION_SCALE,
+        #         },
+        #     ),
+            model_config={
+                "conv_filters": [
+                    [32, [8, 8], 4],
+                    [64, [4, 4], 2],
+                    [64, [3, 3], 2],
+                ],
+                "conv_activation": "relu",
+            }
         )
         .callbacks(WandbCallback)
     )

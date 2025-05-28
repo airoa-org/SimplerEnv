@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 import os
 import sys
 
-sys.path.append("/home/user_00029_25b505/lerobot")
+# sys.path.append("/home/user_00029_25b505/lerobot")
 
 import numpy as np
 import cv2 as cv
@@ -17,8 +17,8 @@ from ray.rllib.utils.annotations import override
 from ray.rllib.utils.typing import TensorType
 from ray.rllib.core.columns import Columns
 from ray.rllib.core.rl_module.torch import TorchRLModule
-from lerobot.common.policies.pi0.modeling_pi0 import PI0Policy
-from lerobot.configs.types import PolicyFeature, FeatureType
+# from lerobot.common.policies.pi0.modeling_pi0 import PI0Policy
+# from lerobot.configs.types import PolicyFeature, FeatureType
 
 
 class Pi0PPOTorchRLModule(TorchRLModule, DefaultPPORLModule):
