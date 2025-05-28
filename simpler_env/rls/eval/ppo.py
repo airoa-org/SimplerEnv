@@ -16,7 +16,7 @@ from simpler_env.rls.modules import Pi0PPOTorchRLModule
 def main():
     VIDEO_NUM = 2
     NUM_EPISODES = 100
-    model_path = "/home/user_00029_25b505/SimplerEnv/results/rllib_test/20250524_151232"
+    model_path = f"{os.path.expanduser('~')}/SimplerEnv/results/rllib_test/20250524_151232"
     
     assert VIDEO_NUM <= NUM_EPISODES
     os.makedirs(f"{model_path}/video", exist_ok=True)

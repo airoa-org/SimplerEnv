@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+import os
 
 import ray
 from ray.tune.registry import register_env
@@ -15,7 +16,7 @@ from simpler_env.rls.modules import Pi0PPOTorchRLModule
 
 def main():
     NUM_GPUS = 1
-    LOG_DIR = "/home/user_00029_25b505/SimplerEnv/results/rllib_test"
+    LOG_DIR = f"{os.path.expanduser('~')}/SimplerEnv/results/rllib_test"
     ENV_ID = "google_robot_pick_coke_can"
     POLICY_SETUP = "google_robot"
     IMAGE_SIZE = [224, 224]
