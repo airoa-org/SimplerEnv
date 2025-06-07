@@ -3,12 +3,12 @@ from typing import Optional, Sequence
 import os
 import sys
 
-sys.path.append(f"{os.path.expanduser('~')}/SimplerEnv/octo")
+sys.path.append(f"{os.path.expanduser('~')}/SimplerEnv/octo-pytorch")
 
-import jax
 import matplotlib.pyplot as plt
 import numpy as np
-from octo.model.octo_model import OctoModel
+from octo.model.octo_model_pt import OctoModelPt
+import torch
 import tensorflow as tf
 from transformers import AutoTokenizer
 from transforms3d.euler import euler2axangle
@@ -16,10 +16,10 @@ from transforms3d.euler import euler2axangle
 from simpler_env.utils.action.action_ensemble import ActionEnsembler
 
 
-class OctoInference:
+class OctoPtInference:
     def __init__(
         self,
-        model: Optional[OctoModel] = None,
+        model: Optional[OctoModelPt] = None,
         dataset_id: Optional[str] = None,
         model_type: str = "octo-base",
         policy_setup: str = "widowx_bridge",
@@ -28,7 +28,6 @@ class OctoInference:
         exec_horizon: int = 1,
         image_size: int = 256,
         action_scale: float = 1.0,
-        init_rng: int = 0,
     ) -> None:
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         if policy_setup == "widowx_bridge":
@@ -46,6 +45,9 @@ class OctoInference:
         self.policy_setup = policy_setup
         self.dataset_id = dataset_id
 
+        self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        assert self.device == "cuda:0"
+
         if model is not None:
             self.tokenizer, self.tokenizer_kwargs = None, None
             self.model = model
@@ -53,9 +55,15 @@ class OctoInference:
             self.action_std = self.model.dataset_statistics[dataset_id]["action"]["std"]
         elif model_type in ["octo-base", "octo-small"]:
             # released huggingface octo models
+            # self.model_type = f"hf://rail-berkeley/{model_type}"
+            # self.tokenizer, self.tokenizer_kwargs = None, None
+            # self.model = OctoModel.load_pretrained(self.model_type)
+            # self.action_mean = self.model.dataset_statistics[dataset_id]["action"]["mean"]
+            # self.action_std = self.model.dataset_statistics[dataset_id]["action"]["std"]
             self.model_type = f"hf://rail-berkeley/{model_type}"
             self.tokenizer, self.tokenizer_kwargs = None, None
-            self.model = OctoModel.load_pretrained(self.model_type)
+            self.model = OctoModelPt.load_pretrained_from_jax(self.model_type, skip_keys_regex='.*hf_model')["octo_model"]
+            self.model.to(self.device)
             self.action_mean = self.model.dataset_statistics[dataset_id]["action"]["mean"]
             self.action_std = self.model.dataset_statistics[dataset_id]["action"]["std"]
         else:
@@ -68,10 +76,11 @@ class OctoInference:
         self.exec_horizon = exec_horizon
         self.action_ensemble = action_ensemble
         self.action_ensemble_temp = action_ensemble_temp
-        self.rng = jax.random.PRNGKey(init_rng)
-        for _ in range(5):
-            # the purpose of this for loop is just to match octo server's inference seeds
-            self.rng, _key = jax.random.split(self.rng)  # each shape [2,]
+
+        # self.rng = jax.random.PRNGKey(init_rng)
+        # for _ in range(5):
+        #     # the purpose of this for loop is just to match octo server's inference seeds
+        #     self.rng, _key = jax.random.split(self.rng)  # each shape [2,]
 
         self.sticky_action_is_on = False
         self.gripper_action_repeat = 0
@@ -117,7 +126,8 @@ class OctoInference:
         return images, pad_mask
 
     def reset(self, task_description: str) -> None:
-        self.task = self.model.create_tasks(texts=[task_description])
+        self.task = self.model.create_tasks(texts=[task_description], device=self.device)
+        
         self.task_description = task_description
         self.image_history.clear()
         if self.action_ensemble:
@@ -154,16 +164,26 @@ class OctoInference:
         images, pad_mask = self._obtain_image_history_and_mask()
         images, pad_mask = images[None], pad_mask[None]
 
-        # we need use a different rng key for each model forward step; this has a large impact on model performance
-        self.rng, key = jax.random.split(self.rng)  # each shape [2,]
-        # print("octo local rng", self.rng, key)
+        # # we need use a different rng key for each model forward step; this has a large impact on model performance
+        # self.rng, key = jax.random.split(self.rng)  # each shape [2,]
+        # # print("octo local rng", self.rng, key)
+        # input_observation = {"image_primary": images, "pad_mask": pad_mask}
+        # norm_raw_actions = self.model.sample_actions(
+        #     input_observation,
+        #     self.task,
+        #     rng=key,
+        # )
 
-        input_observation = {"image_primary": images, "pad_mask": pad_mask}
+        input_observation = {
+            "image_primary": torch.from_numpy(images).permute(0, 1, 4, 2, 3).to(torch.float32).to(self.device),
+            "timestep_pad_mask": torch.from_numpy(pad_mask).to(torch.bool).to(self.device),
+        }
         norm_raw_actions = self.model.sample_actions(
             input_observation,
             self.task,
-            rng=key,
-        )
+            unnormalization_statistics=None,
+        ) # (batch, action_hoison, action_dim) = (1, 4, 7)
+
         raw_actions = norm_raw_actions * self.action_std[None] + self.action_mean[None]
         raw_actions = raw_actions[0]  # remove batch, becoming (action_pred_horizon, action_dim)
 

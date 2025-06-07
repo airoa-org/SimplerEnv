@@ -10,6 +10,7 @@ Example:
 
 import argparse
 import os
+import time
 
 import mediapy as media
 import numpy as np
@@ -21,7 +22,7 @@ from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_ob
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--policy", default="rt1", choices=["rt1", "octo-base", "octo-small"])
+parser.add_argument("--policy", default="rt1", choices=["rt1", "octo-base", "octo-small", "octo-pt-base", "octo-pt-small"])
 parser.add_argument(
     "--ckpt-path",
     type=str,
@@ -37,7 +38,7 @@ parser.add_argument("--tf-memory-limit", type=int, default=3072)
 parser.add_argument("--n-trajs", type=int, default=10)
 
 args = parser.parse_args()
-if args.policy in ["octo-base", "octo-small"]:
+if args.policy in ["octo-base", "octo-small", "octo-pt-base", "octo-pt-small"]:
     if args.ckpt_path in [None, "None"] or "rt_1_x" in args.ckpt_path:
         args.ckpt_path = args.policy
 if args.ckpt_path[-1] == "/":
@@ -71,6 +72,9 @@ if args.policy == "rt1":
     from simpler_env.policies.rt1.rt1_model import RT1Inference
 
     model = RT1Inference(saved_model_path=args.ckpt_path, policy_setup=policy_setup)
+elif "octo-pt" in args.policy:
+    from simpler_env.policies.octo.octo_model_pt import OctoPtInference
+    model = OctoPtInference(model_type=args.ckpt_path, policy_setup=policy_setup)
 elif "octo" in args.policy:
     from simpler_env.policies.octo.octo_model import OctoInference
 
@@ -79,8 +83,10 @@ else:
     raise NotImplementedError()
 
 # run inference
+s = time.time()
 success_arr = []
 for ep_id in range(args.n_trajs):
+    print(F"Running episode {ep_id + 1}/{args.n_trajs}...")
     obs, reset_info = env.reset()
     instruction = env.unwrapped.get_language_instruction()
     # for long-horizon environments, we check if the current subtask is the final subtask
@@ -127,3 +133,4 @@ print(
     np.mean(success_arr),
     f"({np.sum(success_arr)}/{len(success_arr)})",
 )
+print(f"TIME: {(time.time() - s)/60:.2f} [min]")
