@@ -83,7 +83,7 @@ else:
     raise NotImplementedError()
 
 # run inference
-s = time.time()
+start = time.time()
 success_arr = []
 for ep_id in range(args.n_trajs):
     print(F"Running episode {ep_id + 1}/{args.n_trajs}...")
@@ -133,4 +133,4 @@ print(
     np.mean(success_arr),
     f"({np.sum(success_arr)}/{len(success_arr)})",
 )
-print(f"TIME: {(time.time() - s)/60:.2f} [min]")
+print(f"TIME: {(time.time() - start)/60:.2f} [min]")

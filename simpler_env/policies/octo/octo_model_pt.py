@@ -66,6 +66,17 @@ class OctoPtInference:
             self.model.to(self.device)
             self.action_mean = self.model.dataset_statistics[dataset_id]["action"]["mean"]
             self.action_std = self.model.dataset_statistics[dataset_id]["action"]["std"]
+            
+        elif "/home/group_25b505/group_3/shared/models/octo/" in model_type:
+            self.model_type = model_type
+            self.tokenizer, self.tokenizer_kwargs = None, None
+            self.model = OctoModelPt.load_pretrained(self.model_type)["octo_model"]
+            self.model.to(self.device).eval()
+
+            original_model = OctoModelPt.load_pretrained_from_jax("hf://rail-berkeley/octo-base", skip_keys_regex='.*hf_model')["octo_model"]
+            self.action_mean = original_model.dataset_statistics[dataset_id]["action"]["mean"]
+            self.action_std = original_model.dataset_statistics[dataset_id]["action"]["std"]
+            del original_model
         else:
             raise NotImplementedError()
 
