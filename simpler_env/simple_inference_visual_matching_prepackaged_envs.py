@@ -14,7 +14,6 @@ import time
 
 import mediapy as media
 import numpy as np
-import tensorflow as tf
 
 import simpler_env
 from simpler_env import ENVIRONMENTS
@@ -47,15 +46,18 @@ logging_dir = os.path.join(args.logging_root, args.task, args.policy, os.path.ba
 os.makedirs(logging_dir, exist_ok=True)
 
 os.environ["DISPLAY"] = ""
-# prevent a single jax process from taking up all the GPU memory
-os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
-gpus = tf.config.list_physical_devices("GPU")
-if len(gpus) > 0:
-    # prevent a single tf process from taking up all the GPU memory
-    tf.config.set_logical_device_configuration(
-        gpus[0],
-        [tf.config.LogicalDeviceConfiguration(memory_limit=args.tf_memory_limit)],
-    )
+
+if args.policy in ["rt1", "octo-base", "octo-small"]:
+    import tensorflow as tf
+    # prevent a single jax process from taking up all the GPU memory
+    os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+    gpus = tf.config.list_physical_devices("GPU")
+    if len(gpus) > 0:
+        # prevent a single tf process from taking up all the GPU memory
+        tf.config.set_logical_device_configuration(
+            gpus[0],
+            [tf.config.LogicalDeviceConfiguration(memory_limit=args.tf_memory_limit)],
+        )
 
 # build environment
 env = simpler_env.make(args.task)
