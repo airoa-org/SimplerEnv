@@ -51,17 +51,13 @@ class SmolVLAInference:
         if model is not None:
             self.tokenizer, self.tokenizer_kwargs = None, None
             self.model = model
-            self.action_mean = self.model.dataset_statistics[dataset_id]["action"]["mean"]
-            self.action_std = self.model.dataset_statistics[dataset_id]["action"]["std"]
         elif model_type in ["smolvla"]:
             # released huggingface smolVLA models
             self.model_type = "lerobot/smolvla_base" # SmolVLAベースモデル
-            #self.model_type = f"{os.path.expanduser('~/shared-storage')}/group_3/members/user_00005_25b505/workspace/lerobot/outputs/train/2025-06-10/10-50-59_smolvla/checkpoints/last" # Fine-tunedモデル with OXEデータセット
+            # self.model_type = f"{os.path.expanduser('~/shared-storage')}/group_3/members/user_00005_25b505/workspace/lerobot/outputs/train/2025-06-10/10-50-59_smolvla/checkpoints/last" # Fine-tunedモデル with OXEデータセット
             self.tokenizer, self.tokenizer_kwargs = None, None
             self.model = SmolVLAPolicy.from_pretrained(self.model_type)
             self.model.to(self.device)
-            self.action_mean = self.model.dataset_statistics[dataset_id]["action"]["mean"]
-            self.action_std = self.model.dataset_statistics[dataset_id]["action"]["std"]
         else:
             raise NotImplementedError()
 
@@ -158,17 +154,6 @@ class SmolVLAInference:
         images, pad_mask = self._obtain_image_history_and_mask()
         images, pad_mask = images[None], pad_mask[None]
 
-        # このあたり、input_dimensionsの調整が必要かもしれない
-        # # we need use a different rng key for each model forward step; this has a large impact on model performance
-        # self.rng, key = jax.random.split(self.rng)  # each shape [2,]
-        # # print("octo local rng", self.rng, key)
-        # input_observation = {"image_primary": images, "pad_mask": pad_mask}
-        # norm_raw_actions = self.model.sample_actions(
-        #     input_observation,
-        #     self.task,
-        #     rng=key,
-        # )
-
         input_observation = {
             "image_primary": torch.from_numpy(images).permute(0, 1, 4, 2, 3).to(torch.float32).to(self.device),
             "timestep_pad_mask": torch.from_numpy(pad_mask).to(torch.bool).to(self.device),
@@ -178,9 +163,6 @@ class SmolVLAInference:
             self.task,
             unnormalization_statistics=None,
         ) # (batch, action_hoison, action_dim) = (1, 4, 7)
-
-
-        raw_actions = norm_raw_actions * self.action_std[None] + self.action_mean[None]
         raw_actions = raw_actions[0]  # remove batch, becoming (action_pred_horizon, action_dim)
 
         assert raw_actions.shape == (self.pred_action_horizon, 7)
