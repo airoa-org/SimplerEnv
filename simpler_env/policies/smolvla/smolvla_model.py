@@ -3,9 +3,6 @@ from typing import Optional, Sequence
 import os
 import sys
 
-sys.path.append(f"{os.path.expanduser('~/desktop')}/lerobot")
-
-#import jax
 import matplotlib.pyplot as plt
 import numpy as np
 # How to use SmolVLA
@@ -13,7 +10,6 @@ import numpy as np
 # https://huggingface.co/blog/smolvla#train-from-scratch
 from lerobot.common.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 import torch
-import tensorflow as tf
 from transformers import AutoTokenizer
 from transforms3d.euler import euler2axangle
 
