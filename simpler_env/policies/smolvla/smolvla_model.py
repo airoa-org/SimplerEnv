@@ -1,7 +1,6 @@
 from collections import deque
 from typing import Optional, Sequence
 import os
-import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +9,6 @@ import numpy as np
 # https://huggingface.co/blog/smolvla#train-from-scratch
 from lerobot.common.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 import torch
-from transformers import AutoTokenizer
 from transforms3d.euler import euler2axangle
 
 from simpler_env.utils.action.action_ensemble import ActionEnsembler
@@ -88,13 +86,7 @@ class SmolVLAInference:
         self.num_image_history = 0
 
     def _resize_image(self, image: np.ndarray) -> np.ndarray:
-        image = tf.image.resize(
-            image,
-            size=(self.image_size, self.image_size),
-            method="lanczos3",
-            antialias=True,
-        )
-        image = tf.cast(tf.clip_by_value(tf.round(image), 0, 255), tf.uint8).numpy()
+        image = self.model.resize_with_pad(image, *self.model.config.resize_imgs_with_padding, pad_value=0)
         return image
 
     def _add_image_to_history(self, image: np.ndarray) -> None:
