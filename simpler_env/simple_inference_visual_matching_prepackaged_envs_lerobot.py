@@ -28,8 +28,8 @@ from lerobot.common.utils.random_utils import set_seed
 from lerobot.common.utils.utils import (
     get_safe_torch_device,
     init_logging,
-    inside_slurm,
 )
+from lerobot.common.datasets.lerobot_dataset import LeRobotDatasetMetadata
 from lerobot.configs import parser
 from lerobot.configs.eval import EvalPipelineConfig
 from g3_haptics.configs.train import TrainPipelineConfigG3Haptics
@@ -38,14 +38,14 @@ from g3_haptics.configs.train import TrainPipelineConfigG3Haptics
 @dataclass
 class G3EvalPipelineConfig(EvalPipelineConfig):
     env: envs.EnvConfig = None
-    dataset: TrainPipelineConfigG3Haptics | None = None
+    cfg_all: TrainPipelineConfigG3Haptics | None = None
 
     def __post_init__(self):
         super().__post_init__()
         policy_path = parser.get_path_arg("policy")
         if policy_path:
             cli_overrides = parser.get_cli_overrides("policy")
-            self.dataset = TrainPipelineConfigG3Haptics.from_pretrained(policy_path, cli_overrides=cli_overrides)
+            self.cfg_all = TrainPipelineConfigG3Haptics.from_pretrained(policy_path, cli_overrides=cli_overrides)
 
 
 @parser.wrap()
@@ -62,9 +62,14 @@ def eval_main(cfg: G3EvalPipelineConfig):
 
     logging.info("Making policy.")
 
+    # Calculate train and val episodes
+    ds_meta = LeRobotDatasetMetadata(
+        cfg.cfg_all.dataset.repo_id, root=cfg.cfg_all.dataset.root, revision=cfg.cfg_all.dataset.revision
+    )
+
     policy = make_policy(
         cfg=cfg.policy,
-        env_cfg=cfg.env,
+        ds_meta=ds_meta,
     )
     policy.eval()
 
