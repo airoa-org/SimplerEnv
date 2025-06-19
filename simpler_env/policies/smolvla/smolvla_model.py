@@ -7,7 +7,7 @@ import numpy as np
 # How to use SmolVLA
 # https://github.com/huggingface/lerobot/blob/main/lerobot/common/policies/smolvla/modeling_smolvla.py
 # https://huggingface.co/blog/smolvla#train-from-scratch
-from lerobot.common.policies.smolvla.modeling_smolvla import SmolVLAPolicy
+from lerobot.common.policies.smolvla.modeling_smolvla import SmolVLAPolicy, resize_with_pad
 import torch
 from transforms3d.euler import euler2axangle
 
@@ -21,10 +21,7 @@ class SmolVLAInference:
         dataset_id: Optional[str] = None,
         model_type: str = "smolvla",
         policy_setup: str = "widowx_bridge",
-        horizon: int = 2,
-        pred_action_horizon: int = 4,
         exec_horizon: int = 1,
-        image_size: int = 256,
         action_scale: float = 1.0,
     ) -> None:
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -59,17 +56,11 @@ class SmolVLAInference:
         else:
             raise NotImplementedError()
 
-        self.image_size = image_size
         self.action_scale = action_scale
-        self.horizon = horizon
-        self.pred_action_horizon = pred_action_horizon
+        self.pred_action_horizon = self.model.config.n_action_steps
         self.exec_horizon = exec_horizon
         self.action_ensemble = action_ensemble
         self.action_ensemble_temp = action_ensemble_temp
-        #self.rng = jax.random.PRNGKey(init_rng)
-        #for _ in range(5):
-        #    # the purpose of this for loop is just to match octo server's inference seeds
-        #    self.rng, _key = jax.random.split(self.rng)  # each shape [2,]
 
         self.sticky_action_is_on = False
         self.gripper_action_repeat = 0
@@ -78,28 +69,37 @@ class SmolVLAInference:
         self.previous_gripper_action = None
 
         self.task_description = None
-        self.image_history = deque(maxlen=self.horizon)
+        self.image_history = deque(maxlen=self.model.config.n_obs_steps)
         if self.action_ensemble:
             self.action_ensembler = ActionEnsembler(self.pred_action_horizon, self.action_ensemble_temp)
         else:
             self.action_ensembler = None
         self.num_image_history = 0
 
-    def _resize_image(self, image: np.ndarray) -> np.ndarray:
-        image = self.model.resize_with_pad(image, *self.model.config.resize_imgs_with_padding, pad_value=0)
+    def _resize_image(self, image: np.ndarray) -> torch.Tensor:
+        image = np.transpose(image, (2, 0, 1))  # (H, W, 3) -> (3, H, W)
+        image = np.expand_dims(image, axis=0)  # (3, H, W) -> (1, 3, H, W)
+
+        # to torch tensor and to float32 and [0, 255] -> [0, 1]
+        image = torch.from_numpy(image).to(torch.int).to(self.device)
+        image = image.to(torch.float32) / 255.
+
+        # resize image
+        image = resize_with_pad(image, *self.model.config.resize_imgs_with_padding, pad_value=0)
+
         return image
 
-    def _add_image_to_history(self, image: np.ndarray) -> None:
+    def _add_image_to_history(self, image: torch.Tensor) -> None:
         self.image_history.append(image)
         # Alternative implementation below; but looks like for real eval, filling the entire buffer at the first step is not necessary
         # if self.num_image_history == 0:
         #     self.image_history.extend([image] * self.horizon)
         # else:
         #     self.image_history.append(image)
-        self.num_image_history = min(self.num_image_history + 1, self.horizon)
+        self.num_image_history = min(self.num_image_history + 1, self.pred_action_horizon)
 
     def _obtain_image_history_and_mask(self) -> tuple[np.ndarray, np.ndarray]:
-        images = np.stack(self.image_history, axis=0)
+        images = torch.cat(list(self.image_history), dim=0)
         horizon = len(self.image_history)
         pad_mask = np.ones(horizon, dtype=np.float64)  # note: this should be of float type, not a bool type
         pad_mask[: horizon - min(horizon, self.num_image_history)] = 0
@@ -141,17 +141,16 @@ class SmolVLAInference:
         assert image.dtype == np.uint8
         image = self._resize_image(image)
         self._add_image_to_history(image)
+
         images, pad_mask = self._obtain_image_history_and_mask()
         images, pad_mask = images[None], pad_mask[None]
 
-        input_observation = {
-            "image_primary": torch.from_numpy(images).permute(0, 1, 4, 2, 3).to(torch.float32).to(self.device),
-            "timestep_pad_mask": torch.from_numpy(pad_mask).to(torch.bool).to(self.device),
+        batch = {
+            "observation.images.image": images,
+            "obaservation.state": None,
+            "task": [self.task_description,],
         }
-        norm_raw_actions = self.model.sample_actions(
-            input_observation,
-            unnormalization_statistics=None,
-        ) # (batch, action_hoison, action_dim) = (1, 4, 7)
+        raw_actions = self.model.select_action(batch=batch)
         raw_actions = raw_actions[0]  # remove batch, becoming (action_pred_horizon, action_dim)
 
         assert raw_actions.shape == (self.pred_action_horizon, 7)
