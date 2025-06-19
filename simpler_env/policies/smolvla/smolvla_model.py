@@ -79,7 +79,6 @@ class SmolVLAInference:
         # self.gripper_is_closed = False
         self.previous_gripper_action = None
 
-        self.task = None
         self.task_description = None
         self.image_history = deque(maxlen=self.horizon)
         if self.action_ensemble:
@@ -117,7 +116,6 @@ class SmolVLAInference:
         return images, pad_mask
 
     def reset(self, task_description: str) -> None:
-        self.task = self.model.create_tasks(texts=[task_description], device=self.device)
         self.task_description = task_description
         self.image_history.clear()
         if self.action_ensemble:
@@ -160,7 +158,6 @@ class SmolVLAInference:
         }
         norm_raw_actions = self.model.sample_actions(
             input_observation,
-            self.task,
             unnormalization_statistics=None,
         ) # (batch, action_hoison, action_dim) = (1, 4, 7)
         raw_actions = raw_actions[0]  # remove batch, becoming (action_pred_horizon, action_dim)
