@@ -120,7 +120,10 @@ class SmolVLAInference:
         # self.gripper_is_closed = False
         self.previous_gripper_action = None
 
-    def step(self, image: np.ndarray, task_description: Optional[str] = None, *args, **kwargs) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
+    def step(self,
+             image: np.ndarray,
+             task_description: Optional[str] = None,
+             *args, **kwargs) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
         """
         Input:
             image: np.ndarray of shape (H, W, 3), uint8
@@ -143,11 +146,10 @@ class SmolVLAInference:
         self._add_image_to_history(image)
 
         images, pad_mask = self._obtain_image_history_and_mask()
-        images, pad_mask = images[None], pad_mask[None]
 
         batch = {
             "observation.images.image": images,
-            "obaservation.state": None,
+            "observation.state": None,
             "task": [self.task_description,],
         }
         raw_actions = self.model.select_action(batch=batch)
