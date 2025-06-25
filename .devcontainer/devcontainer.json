@@ -12,10 +12,10 @@
         "--privileged"
     ],
     "mounts": [
-        "source=/home/takanori.yoshimoto/code/SimplerEnv,target=/root/SimplerEnv,type=bind",
+        "source=/home/takanori.yoshimoto/code/SimplerEnv,target=/app/SimplerEnv,type=bind",
         "source=/home/takanori.yoshimoto/code/hsr_openpi/checkpoints,target=/data/checkpoints,type=bind"
     ],
-    "workspaceFolder": "/root/SimplerEnv",
+    "workspaceFolder": "/app/SimplerEnv",
     "customizations": {
         "vscode": {
             "extensions": [

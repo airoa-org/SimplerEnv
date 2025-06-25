@@ -3,20 +3,29 @@ ENV NVIDIA_DRIVER_CAPABILITIES=all
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install packages for simpler
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     bash-completion build-essential ca-certificates cmake curl git \
+#     htop unzip vim wget \
+#     libvulkan1 libvulkan-dev vulkan-tools xvfb \
+#     libglvnd-dev libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libglib2.0-0
+# RUN rm -rf /var/lib/apt/lists/*
+
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash-completion build-essential ca-certificates cmake curl git \
-    htop unzip vim wget
+    htop libegl1 libxext6 libjpeg-dev libpng-dev  libvulkan1 rsync \
+    tmux unzip vim vulkan-utils wget xvfb pkg-config \
+    libglvnd-dev libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libglib2.0-0
 RUN rm -rf /var/lib/apt/lists/*
 
-WORKDIR /
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py310_23.1.0-1-Linux-x86_64.sh -O ~/miniconda.sh && \
-    bash ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh
-ENV PATH /opt/conda/bin:$PATH
-
+# libvulkan1 libvulkan-dev vulkan-tools xvfb ffmpeg これだけでもいいかも？
 
 RUN wget -qO- https://astral.sh/uv/install.sh | sh
-RUN conda install -c conda-forge libgl glib libvulkan-loader vulkan-tools vulkan-headers
+
+# https://github.com/haosulab/ManiSkill/issues/9
+COPY nvidia/10_nvidia.json /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+COPY nvidia/nvidia_icd.json /usr/share/vulkan/icd.d/nvidia_icd.json
+COPY nvidia/nvidia_layers.json /etc/vulkan/implicit_layer.d/nvidia_layers.json
 
 # install dependencies
 # RUN conda install -c conda-forge libgl glib libvulkan-loader vulkan-tools vulkan-headers
