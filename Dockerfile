@@ -14,7 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash-completion build-essential ca-certificates cmake curl git \
     htop libegl1 libxext6 libjpeg-dev libpng-dev  libvulkan1 rsync \
-    tmux unzip vim vulkan-utils wget xvfb pkg-config \
+    tmux unzip vim vulkan-utils wget xvfb pkg-config ffmpeg \
     libglvnd-dev libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libglib2.0-0
 RUN rm -rf /var/lib/apt/lists/*
 
