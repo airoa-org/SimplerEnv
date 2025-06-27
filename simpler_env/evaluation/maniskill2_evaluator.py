@@ -84,7 +84,7 @@ def run_maniskill2_eval_single_episode(
         }
     obs, _ = env.reset(options=env_reset_options)
     # for long-horizon environments, we check if the current subtask is the final subtask
-    is_final_subtask = env.is_final_subtask() 
+    is_final_subtask = env.is_final_subtask()
 
     # Obtain language instruction
     if instruction is not None:
@@ -109,7 +109,8 @@ def run_maniskill2_eval_single_episode(
     # Step the environment
     while not (predicted_terminated or truncated):
         # step the model; "raw_action" is raw model action output; "action" is the processed action to be sent into maniskill env
-        raw_action, action = model.step(image, task_description)
+        eef_pos = obs["agent"]["eef_pos"]
+        raw_action, action = model.step(image, eef_pos, task_description)
         predicted_actions.append(raw_action)
         predicted_terminated = bool(action["terminate_episode"][0] > 0)
         if predicted_terminated:
@@ -122,7 +123,7 @@ def run_maniskill2_eval_single_episode(
         obs, reward, done, truncated, info = env.step(
             np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
         )
-        
+
         success = "success" if done else "failure"
         new_task_description = env.get_language_instruction()
         if new_task_description != task_description:
@@ -161,6 +162,7 @@ def run_maniskill2_eval_single_episode(
     video_path = f"{ckpt_path_basename}/{scene_name}/{control_mode}/{env_save_name}/rob_{robot_init_x}_{robot_init_y}_rot_{r:.3f}_{p:.3f}_{y:.3f}_rgb_overlay_{rgb_overlay_path_str}/{video_name}"
     video_path = os.path.join(logging_dir, video_path)
     write_video(video_path, images, fps=5)
+    print(f"Video saved to {video_path}")
 
     # save action trajectory
     action_path = video_path.replace(".mp4", ".png")

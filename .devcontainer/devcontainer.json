@@ -1,8 +1,8 @@
 {
     // docker build . -t simpler-env
-    "image": "simpler-env",
+    "image": "simpler_env",
     "runArgs": [
-        "--name=simpler-env-ynn",
+        "--name=simpler_env-ynn",
         "--net=host",
         "--ipc=host",
         "--gpus",
