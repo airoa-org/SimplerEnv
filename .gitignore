@@ -27,3 +27,6 @@ dist/
 .vscode
 
 imgui.ini
+
+# Ignore openpi debug outputs
+results
