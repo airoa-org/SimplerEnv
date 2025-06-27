@@ -1,8 +1,10 @@
 ## Docker外
 ```bash
+# こっちをやるとmaniskill2のバージョンがずれてしまう
 # git clone https://github.com/airoa-org/SimplerEnv.git --recurse-submodules
+
 git clone https://github.com/airoa-org/SimplerEnv.git
-git checkout origin/eval-baseline-v2
+git checkout origin/benchmark
 git submodule update --init --recursive
 cd SimplerEnv
 git clone https://github.com/airoa-org/hsr_openpi.git  # サブモジュールの中にもbranchの切り替えとかが必要の可能性がある
