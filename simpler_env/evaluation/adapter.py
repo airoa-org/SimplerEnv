@@ -186,7 +186,6 @@ class OpenpiSimplerFractalAdapter(BaseAdapter):
 
         # without sticky
         relative_gripper_action = -gripper_action
-        # print(f"gripper_action B: {relative_gripper_action}, {self.sticky_action_is_on}")
         # if self.previous_gripper_action is None:
         #     relative_gripper_action = -1  # open
         # else:
@@ -194,22 +193,20 @@ class OpenpiSimplerFractalAdapter(BaseAdapter):
         # self.previous_gripper_action = action
 
         # switch to sticky closing
-        # if np.abs(relative_gripper_action) > 0.5 and self.sticky_action_is_on is False:
-        #     self.sticky_action_is_on = True
-        #     self.sticky_gripper_action = relative_gripper_action
+        if np.abs(relative_gripper_action) > 0.5 and self.sticky_action_is_on is False:
+            self.sticky_action_is_on = True
+            self.sticky_gripper_action = relative_gripper_action
 
-        # # sticky closing
-        # if self.sticky_action_is_on:
-        #     self.gripper_action_repeat += 1
-        #     relative_gripper_action = self.sticky_gripper_action
+        # sticky closing
+        if self.sticky_action_is_on:
+            self.gripper_action_repeat += 1
+            relative_gripper_action = self.sticky_gripper_action
 
-        # # reaching maximum sticky
-        # if self.gripper_action_repeat == self.sticky_gripper_num_repeat:
-        #     self.sticky_action_is_on = False
-        #     self.gripper_action_repeat = 0
-        #     self.sticky_gripper_action = 0.0
-
-        # print(f"gripper_action A: {relative_gripper_action}")
+        # reaching maximum sticky
+        if self.gripper_action_repeat == self.sticky_gripper_num_repeat:
+            self.sticky_action_is_on = False
+            self.gripper_action_repeat = 0
+            self.sticky_gripper_action = 0.0
 
         action = np.concatenate(
             [

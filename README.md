@@ -30,6 +30,17 @@ We hope that our work guides and inspires future real-to-sim evaluation efforts.
   - [Citation](#citation)
 
 
+## How to add your policy
+
+scripts/openpi/policy.pyを参考にpolicyを作成し、以下のようにpolicyをラップすると評価できる。
+```python
+from simpler_env.evaluation.adapter import OpenpiSimplerBridgeAdapter, OpenpiSimplerFractalAdapter
+
+policy = ...
+env_policy = OpenpiSimplerFractalAdapter(policy=policy)
+success_arr = maniskill2_evaluator(env_policy, cfg)
+```
+
 ## Getting Started
 
 Follow the [Installation](#installation) section to install the minimal requirements for our environments. Then you can run the following minimal inference script with interactive python. The scripts creates prepackaged environments for our `visual matching` evaluation setup.
