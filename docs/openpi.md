@@ -26,8 +26,6 @@ uv pip install -e .
 uv pip install "tensorflow-cpu==2.15.*"
 uv pip install mediapy
 
-# テスト
-python tes.py
 
 python simpler_env/policies/openpi/openpi_model.py --robot=widowx --control-freq=5 --sim-freq=500 --scene-name=bridge_table_1_v1 --rgb-overlay-path=ManiSkill2_real2sim/data/real_inpainting/bridge_real_eval_1.png --env-name=StackGreenCubeOnYellowCubeBakedTexInScene-v0
 CUDA_VISIBLE_DEVICES=1 python -m scripts.openpi.pick_coke_can_visual_matching --ckpt-paths /data/checkpoints/pi0_fractal_low_mem_finetune2/my_experiment/17000
