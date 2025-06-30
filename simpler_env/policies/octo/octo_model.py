@@ -127,7 +127,9 @@ class OctoInference:
         # self.gripper_is_closed = False
         self.previous_gripper_action = None
 
-    def step(self, image: np.ndarray, task_description: Optional[str] = None, *args, **kwargs) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
+    def step(
+        self, image: np.ndarray, eef_pos: np.ndarray, task_description: Optional[str] = None, *args, **kwargs
+    ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
         """
         Input:
             image: np.ndarray of shape (H, W, 3), uint8
@@ -211,9 +213,7 @@ class OctoInference:
             if self.previous_gripper_action is None:
                 relative_gripper_action = np.array([0])
             else:
-                relative_gripper_action = (
-                    self.previous_gripper_action - current_gripper_action
-                )  # google robot 1 = close; -1 = open
+                relative_gripper_action = self.previous_gripper_action - current_gripper_action  # google robot 1 = close; -1 = open
             self.previous_gripper_action = current_gripper_action
 
             if np.abs(relative_gripper_action) > 0.5 and self.sticky_action_is_on is False:
@@ -232,9 +232,7 @@ class OctoInference:
             action["gripper"] = relative_gripper_action
 
         elif self.policy_setup == "widowx_bridge":
-            action["gripper"] = (
-                2.0 * (raw_action["open_gripper"] > 0.5) - 1.0
-            )  # binarize gripper action to 1 (open) and -1 (close)
+            action["gripper"] = 2.0 * (raw_action["open_gripper"] > 0.5) - 1.0  # binarize gripper action to 1 (open) and -1 (close)
             # self.gripper_is_closed = (action['gripper'] < 0.0)
 
         action["terminate_episode"] = np.array([0.0])
@@ -254,12 +252,7 @@ class OctoInference:
         fig.set_size_inches([45, 10])
 
         # plot actions
-        pred_actions = np.array(
-            [
-                np.concatenate([a["world_vector"], a["rotation_delta"], a["open_gripper"]], axis=-1)
-                for a in predicted_raw_actions
-            ]
-        )
+        pred_actions = np.array([np.concatenate([a["world_vector"], a["rotation_delta"], a["open_gripper"]], axis=-1) for a in predicted_raw_actions])
         for action_dim, action_label in enumerate(ACTION_DIM_LABELS):
             # actions have batch, horizon, dim, in this example we just take the first action for simplicity
             axs[action_label].plot(pred_actions[:, action_dim], label="predicted action")

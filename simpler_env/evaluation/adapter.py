@@ -20,12 +20,9 @@ class BaseAdapter:
     def postprocess(self, outputs: Dict) -> Dict:
         pass
 
-    def step(
-        self, image: np.ndarray, eef_pos: np.ndarray, task_description: Optional[str] = None
-    ) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
-        prompt = task_description
+    def step(self, image: np.ndarray, eef_pos: np.ndarray, prompt: Optional[str] = None) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
         inputs = self.preprocess(image, eef_pos, prompt)
-        outputs = self.policy.infer(inputs)
+        outputs = self.policy.step(inputs)
         state_gripper = inputs["state"][-1]
         action_gripper = outputs["actions"][-1]
         print(f"state: {state_gripper} action: {action_gripper}")

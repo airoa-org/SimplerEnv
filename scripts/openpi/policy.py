@@ -6,7 +6,7 @@ import numpy as np
 
 class AiroaBasePolicy:
     @abstractmethod
-    def infer(self, obs: Dict) -> Dict:
+    def step(self, obs: Dict) -> Dict:
         pass
 
     @abstractmethod
@@ -18,7 +18,7 @@ class OpenpiToAiroaPolicy(AiroaBasePolicy):
     def __init__(self, policy):
         self.policy = policy
 
-    def infer(self, obs: Dict) -> Dict:
+    def step(self, obs: Dict) -> Dict:
         outputs = self.policy.infer(obs)
         outputs["terminate_episode"] = np.zeros(outputs["actions"].shape[0])
         return outputs
