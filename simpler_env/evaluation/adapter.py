@@ -25,7 +25,7 @@ class BaseAdapter:
         outputs = self.policy.step(inputs)
         state_gripper = inputs["state"][-1]
         action_gripper = outputs["actions"][-1]
-        print(f"state: {state_gripper} action: {action_gripper}")
+        # print(f"state: {state_gripper} action: {action_gripper}")
         final_outputs = self.postprocess(outputs)
         simpler_outputs = {
             "world_vector": outputs["actions"][:3],
@@ -78,7 +78,7 @@ class BaseAdapter:
 
 
 # from https://github.com/allenzren/open-pi-zero/blob/main/src/agent/env_adapter/simpler.py
-class OpenpiSimplerBridgeAdapter(BaseAdapter):
+class AiroaToSimplerBridgeAdapter(BaseAdapter):
     def __init__(self, policy):
         super().__init__(policy)
         # EE pose in Bridge data was relative to a top-down pose, instead of robot base
@@ -134,7 +134,7 @@ class OpenpiSimplerBridgeAdapter(BaseAdapter):
         }
 
 
-class OpenpiSimplerFractalAdapter(BaseAdapter):
+class AiroaToSimplerFractalAdapter(BaseAdapter):
     def __init__(self, policy):
         super().__init__(policy)
         # Constants

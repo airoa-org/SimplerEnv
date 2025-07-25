@@ -1,3 +1,167 @@
+# airoa-SimplerEnv-benchmark
+
+HSR以外にもシングルアームロボットに対してどのくらいモデルが有効かを評価するためのベンチマーク
+## スコアの計算方法
+
+**ロバストスコア (Robust Score)**
+このスコアは、モデルの**平均性能**と**安定性**の両方を評価する。
+
+$$\text{Robust Score} = \max(0, \mu - k \cdot \sigma)$$
+
+ここで、
+
+  * $\mu$ (ミュー) は、評価項目全体の**平均成功率**。
+  * $\sigma$ (シグマ) は、各評価項目の成功率の**標準偏差**。これは性能のばらつき（不安定さ）を示す。
+  * $k$ は**ペナルティ係数**。標準偏差がスコアに与える影響の大きさを調整する。今回は `0.5` に設定し、ばらつきに対して中程度のペナルティを課す。
+
+## スコア提出、算出、モデルのアップロード方法
+
+### 0. 環境構築
+```bash
+# こっちをやるとmaniskill2のバージョンがずれてしまう
+# git clone https://github.com/airoa-org/SimplerEnv.git --recurse-submodules
+
+git clone https://github.com/airoa-org/SimplerEnv.git
+git checkout origin/benchmark
+git submodule update --init --recursive
+cd SimplerEnv
+docker build -t simpler_env .
+```
+
+このdocker内にあなたのモデルの推論環境を構築してください。
+uvを用いた例
+```bash
+git clone https://github.com/airoa-org/<your_group_name>
+cd <your_group_name>
+GIT_LFS_SKIP_SMUDGE=1 uv sync
+GIT_LFS_SKIP_SMUDGE=1 uv pip install -e .
+cd ..
+source $(pwd)/<your_group_name>/.venv/bin/activate
+# install simpler_env to your model environment
+uv pip install "numpy<2.0"
+uv pip install -e ./ManiSkill2_real2sim
+uv pip install -e .
+uv pip install "tensorflow-cpu==2.15.*"
+uv pip install mediapy
+```
+
+### 1. ポリシーの実装
+scripts/[your_group_name]/evaluate_fractal.pyに実装
+scripts/[your_group_name]/README.mdにあなたのポリシーの説明を記載
+を行う
+scripts/[your_group_name]/*以外のファイルは変更しないでください
+
+
+実装方法
+`AiroaBasePolicy`のインターフェースとあなたのモデルを合わせる。
+そのために`AiroaBasePolicy`を継承したクラスを作成し、`step`と`reset`、`terminate_episode`を実装する。
+```python
+import argparse
+from typing import Dict
+
+import numpy as np
+
+from simpler_env.evaluation.adapter import AiroaToSimplerFractalAdapter
+from simpler_env.evaluation.scores import run_comprehensive_evaluation
+from simpler_env.policies.base import AiroaBasePolicy
+
+
+class OpenpiToAiroaPolicy(AiroaBasePolicy):
+    def __init__(self, policy):
+        self.policy = policy
+
+    def step(self, obs: Dict) -> Dict:
+        outputs = self.policy.infer(obs)
+        outputs["terminate_episode"] = np.zeros(outputs["actions"].shape[0])
+        return outputs
+
+    def reset(self) -> None:
+        self.policy.reset()
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
+    parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    ckpt_path = args.ckpt_path
+
+    policy = OpenpiToAiroaPolicy(
+        policy=...
+    )
+
+    env_policy = AiroaToSimplerFractalAdapter(policy=policy)
+
+    print("Policy initialized. Starting evaluation...")
+
+    final_scores = run_comprehensive_evaluation(env_policy=env_policy, ckpt_path=args.ckpt_path)
+
+    print("\nEvaluation finished.")
+    print(f"Final calculated scores: {final_scores}")
+
+```
+
+なお、それぞれの引数は以下のような値を取る
+```python
+outputs
+{'actions': array([ 0.07858976,  0.01038913, -0.01314185, -0.12083581, -0.04212694,
+        0.01047405, -0.47187362]), 'terminate_episode': array([0., 0., 0., 0., 0., 0., 0.])}
+special variables
+function variables
+'actions' =
+array([ 0.07858976,  0.01038913, -0.01314185, -0.12083581, -0.04212694,
+        0.01047405, -0.47187362])
+'terminate_episode' =
+array([0., 0., 0., 0., 0., 0., 0.])
+len() =
+2
+outputs["actions"]
+array([ 0.07858976,  0.01038913, -0.01314185, -0.12083581, -0.04212694,
+        0.01047405, -0.47187362])
+outputs["actions"].shape
+(7,)
+obs
+{'image': array([[[ 55,  35,  24],
+        [ 55,  35,  24],
+        [ 55,  35,  24],
+        .....],
+        [170, 133, 100]]], dtype=uint8), 'prompt': 'pick coke can', 'state': array([ 0.6511007 , -0.1227724 ,  1.05364919, -0.39264132,  0.79223414,
+        0.22855263,  0.40738379,  0.82691604])}
+obs["image"].shape
+(512, 640, 3)
+```
+
+### 2. スコアの計算
+
+```bash
+CUDA_VISIBLE_DEVICES=1 uv run scripts/<your_group_name>/evaluate_fractal.py --ckpt-path <your_checkpoint_path>
+```
+この処理にはかなり時間がかかる。
+
+
+### 3. モデルのアップロード
+
+モデルをwasabiにアップロードする
+Naming rule: `<checkpoint_date>_<checkpoint_name>`
+```bash
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+
+# Get general summary
+aws s3 ls --summarize --recursive s3://airoa-fm-development-competition/<your_group_folder>/ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+# List objects
+aws s3 ls s3://airoa-fm-development-competition/<your_group_folder>/ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+# Copy object local to wasabi
+aws s3 cp testfile s3://airoa-fm-development-competition/<your_group_folder>/ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+# Copy object wasabi to local
+aws s3 cp s3://airoa-fm-development-competition/<your_group_folder>/testfile ./ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+```
+
+
+
 # SimplerEnv: Simulated Manipulation Policy Evaluation Environments for Real Robot Setups
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simpler-env/SimplerEnv/blob/main/example.ipynb)
@@ -28,18 +192,6 @@ We hope that our work guides and inspires future real-to-sim evaluation efforts.
     - [Octo Inference Setup](#octo-inference-setup)
   - [Troubleshooting](#troubleshooting)
   - [Citation](#citation)
-
-
-## How to add your policy
-
-scripts/openpi/policy.pyを参考にpolicyを作成し、以下のようにpolicyをラップすると評価できる。
-```python
-from simpler_env.evaluation.adapter import OpenpiSimplerBridgeAdapter, OpenpiSimplerFractalAdapter
-
-policy = ...
-env_policy = OpenpiSimplerFractalAdapter(policy=policy)
-success_arr = maniskill2_evaluator(env_policy, cfg)
-```
 
 ## Getting Started
 
