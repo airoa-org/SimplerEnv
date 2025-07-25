@@ -131,7 +131,7 @@ def run_maniskill2_eval_single_episode(
             print(task_description)
         is_final_subtask = env.is_final_subtask()
 
-        print(timestep, info)
+        # print(timestep, info)
 
         image = get_image_from_maniskill2_obs_dict(env, obs, camera_name=obs_camera_name)
         images.append(image)

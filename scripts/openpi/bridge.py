@@ -1,10 +1,13 @@
 import argparse
+
 from openpi.policies import policy_config as _policy_config
 from openpi.training import config as _config
 from openpi_client import action_chunk_broker
-from simpler_env.evaluation.adapter import OpenpiSimplerBridgeAdapter, OpenpiSimplerFractalAdapter
+
+from simpler_env.evaluation.adapter import AiroaToSimplerBridgeAdapter, AiroaToSimplerFractalAdapter
 from simpler_env.evaluation.config import ManiSkill2Config
 from simpler_env.evaluation.maniskill2_evaluator import maniskill2_evaluator
+
 from .policy import OpenpiToAiroaPolicy
 
 
@@ -72,7 +75,7 @@ if __name__ == "__main__":
             )
 
             # Use appropriate adapter based on policy setup
-            env_policy = OpenpiSimplerBridgeAdapter(policy=policy)
+            env_policy = AiroaToSimplerBridgeAdapter(policy=policy)
 
             # Run evaluation
             success_arr = maniskill2_evaluator(env_policy, cfg)
@@ -116,7 +119,7 @@ if __name__ == "__main__":
             )
 
             # Use appropriate adapter based on policy setup
-            env_policy = OpenpiSimplerBridgeAdapter(policy=policy)
+            env_policy = AiroaToSimplerBridgeAdapter(policy=policy)
 
             # Run evaluation
             success_arr = maniskill2_evaluator(env_policy, cfg)
