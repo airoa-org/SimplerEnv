@@ -110,20 +110,21 @@ def _evaluate_coke_can_grasping(env_policy: AiroaBasePolicy, ckpt_path: str) -> 
 
 
 def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> Tuple[List[List[bool]], List[List[bool]]]:
-    """「Drawer Placement」タスクのsimとoverlay評価を行う"""
+    """「Drawer Placement」タスクのsimとoverlay評価を行う（シェルスクリプトの動作に準拠）"""
     print("\n--- Starting: 2. Drawer Placement Suite ---")
     sim_results, vm_results = [], []
 
     # --- 2a. Simulation ---
     print("\n[Section 2a: Simulation Variants]")
-    base_sim_kwargs = {
+
+    # レイトレーシング設定を含まない、全シミュレーション共通の引数
+    common_sim_kwargs = {
         "robot": "google_robot_static",
         "policy_setup": "google_robot",
         "control_freq": 3,
         "sim_freq": 513,
         "max_episode_steps": 200,
         "ckpt_path": ckpt_path,
-        "enable_raytracing": True,
         "additional_env_build_kwargs": {"model_ids": "apple"},
         "robot_init_rot_quat_center": [0, 0, 0, 1],
         "obj_init_x_range": [-0.08, -0.02, 3],
@@ -132,18 +133,48 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
         "robot_init_y_range": [-0.2, 0.2, 3],
         "robot_init_rot_rpy_range": [0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
     }
-    # Base, Backgrounds, Lights, Cabinets
-    eval_configs = [
-        {"scene_name": "frl_apartment_stage_simple"},
+
+    # === ケース1: Base (enable_raytracing=Trueを使用) ===
+    base_case_kwargs = common_sim_kwargs.copy()
+    base_case_kwargs["scene_name"] = "frl_apartment_stage_simple"
+    # TrueにするとFailed to denoise OptiX Error: OPTIX_ERROR_INVALID_VALUEが出る
+    base_case_kwargs["enable_raytracing"] = False
+    cfg_base = ManiSkill2Config(**base_case_kwargs, env_name="PlaceIntoClosedTopDrawerCustomInScene-v0")
+    sim_results.append(_run_single_evaluation(env_policy, cfg_base, ckpt_path))
+
+    # === ケース2: Backgrounds, Lights, Cabinets (shader_dir='rt'を使用) ===
+    other_eval_configs = [
+        # Backgrounds
         {"scene_name": "modern_bedroom_no_roof"},
         {"scene_name": "modern_office_no_roof"},
-        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"light_mode": "brighter", "model_ids": "apple"}},
-        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"light_mode": "darker", "model_ids": "apple"}},
-        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"station_name": "mk_station2", "model_ids": "apple"}},
-        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"station_name": "mk_station3", "model_ids": "apple"}},
+        # Lights
+        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"light_mode": "brighter"}},
+        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"light_mode": "darker"}},
+        # Cabinets
+        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"station_name": "mk_station2"}},
+        {"scene_name": "frl_apartment_stage_simple", "additional_env_build_kwargs": {"station_name": "mk_station3"}},
     ]
-    for config_update in eval_configs:
-        cfg = ManiSkill2Config(**base_sim_kwargs, env_name="PlaceIntoClosedTopDrawerCustomInScene-v0", **config_update)
+
+    for config_update in other_eval_configs:
+        kwargs = common_sim_kwargs.copy()
+        update_data = config_update.copy()
+
+        # kwargs内の辞書を安全にコピーしてマージ処理を行う
+        merged_build_kwargs = kwargs.get("additional_env_build_kwargs", {}).copy()
+
+        # シェルの shader_dir=rt に相当する設定を追加
+        merged_build_kwargs["shader_dir"] = "rt"
+
+        # 各評価（Light, Cabinetなど）固有のビルド引数をマージ
+        if "additional_env_build_kwargs" in update_data:
+            merged_build_kwargs.update(update_data.pop("additional_env_build_kwargs"))
+
+        kwargs["additional_env_build_kwargs"] = merged_build_kwargs
+
+        # scene_name などのトップレベルの引数を更新
+        kwargs.update(update_data)
+
+        cfg = ManiSkill2Config(**kwargs, env_name="PlaceIntoClosedTopDrawerCustomInScene-v0")
         sim_results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # --- 2b. Visual Matching (Overlay) ---
@@ -170,6 +201,10 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
     ]
     urdf_versions = ["recolor_cabinet_visual_matching_1", "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", None]
 
+    # Visual Matchingの基本設定は 'enable_raytracing' を含まないため、元のcommon_sim_kwargsが利用できる
+    vm_base_kwargs = common_sim_kwargs.copy()
+    vm_base_kwargs["enable_raytracing"] = False  # Visual Matchingではレイトレーシングを有効にする
+
     for urdf in urdf_versions:
         additional_kwargs = {
             "station_name": "mk_station_recolor",
@@ -180,7 +215,7 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
         }
         for setup in overlay_setups:
             cfg = ManiSkill2Config(
-                **base_sim_kwargs,
+                **vm_base_kwargs,
                 env_name="PlaceIntoClosedTopDrawerCustomInScene-v0",
                 scene_name="dummy_drawer",
                 max_episode_steps=200,
