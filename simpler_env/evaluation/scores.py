@@ -8,6 +8,15 @@ from simpler_env.evaluation.config import ManiSkill2Config
 from simpler_env.evaluation.maniskill2_evaluator import maniskill2_evaluator
 from simpler_env.policies.base import AiroaBasePolicy
 
+MANISKILL2_REAL2SIM_DIR = os.environ.get(
+    "MANISKILL2_REAL2SIM_DIR", "./ManiSkill2_real2sim/data"
+)
+
+assert os.path.isdir(MANISKILL2_REAL2SIM_DIR), (
+    f"Directory does not exist: {MANISKILL2_REAL2SIM_DIR}\n"
+    f"Please set the environment variable MANISKILL2_REAL2SIM_DIR to the correct path."
+)
+
 
 def calculate_robust_score(results: List[List[bool]], penalty_factor: float = 0.5) -> float:
     """
@@ -96,7 +105,7 @@ def _evaluate_coke_can_grasping(env_policy: AiroaBasePolicy, ckpt_path: str) -> 
                 **base_kwargs,
                 env_name="GraspSingleOpenedCokeCanInScene-v0",
                 scene_name="google_pick_coke_can_1_v4",
-                rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
+                rgb_overlay_path=f"{MANISKILL2_REAL2SIM_DIR}/real_inpainting/google_coke_can_real_eval_1.png",
                 additional_env_build_kwargs=additional_kwargs,
             )
             result = _run_single_evaluation(env_policy, cfg, ckpt_path)
@@ -184,19 +193,19 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
             "robot_init_x_range": [0.644, 0.644, 1],
             "robot_init_y_range": [-0.179, -0.179, 1],
             "robot_init_rot_rpy_range": [0, 0, 1, 0, 0, 1, -0.03, -0.03, 1],
-            "rgb_overlay_path": "./ManiSkill2_real2sim/data/real_inpainting/open_drawer_a0.png",
+            "rgb_overlay_path": f"{MANISKILL2_REAL2SIM_DIR}/real_inpainting/open_drawer_a0.png",
         },
         {
             "robot_init_x_range": [0.652, 0.652, 1],
             "robot_init_y_range": [0.009, 0.009, 1],
             "robot_init_rot_rpy_range": [0, 0, 1, 0, 0, 1, 0, 0, 1],
-            "rgb_overlay_path": "./ManiSkill2_real2sim/data/real_inpainting/open_drawer_b0.png",
+            "rgb_overlay_path": f"{MANISKILL2_REAL2SIM_DIR}/real_inpainting/open_drawer_b0.png",
         },
         {
             "robot_init_x_range": [0.665, 0.665, 1],
             "robot_init_y_range": [0.224, 0.224, 1],
             "robot_init_rot_rpy_range": [0, 0, 1, 0, 0, 1, 0, 0, 1],
-            "rgb_overlay_path": "./ManiSkill2_real2sim/data/real_inpainting/open_drawer_c0.png",
+            "rgb_overlay_path": f"{MANISKILL2_REAL2SIM_DIR}/real_inpainting/open_drawer_c0.png",
         },
     ]
     urdf_versions = ["recolor_cabinet_visual_matching_1", "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", None]
@@ -281,7 +290,7 @@ def _evaluate_move_near(env_policy: AiroaBasePolicy, ckpt_path: str) -> Tuple[Li
             **base_kwargs,
             env_name="MoveNearGoogleBakedTexInScene-v0",
             scene_name="google_pick_coke_can_1_v4",
-            rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_move_near_real_eval_1.png",
+            rgb_overlay_path=f"{MANISKILL2_REAL2SIM_DIR}/real_inpainting/google_move_near_real_eval_1.png",
             additional_env_save_tags="baked_except_bpb_orange",
             additional_env_build_kwargs={"urdf_version": urdf},
         )
