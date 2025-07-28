@@ -152,14 +152,19 @@ class AiroaToSimplerFractalAdapter(BaseAdapter):
         gripper_closedness = (
             1 - gripper_width
         )  # TODO(allenzren): change fractal data processing in training so also use gripper openness in proprio (as in bridge) instead of closedness
-        proprio = np.concatenate(
+        # Create 8-dimensional base state
+        proprio_base = np.concatenate(
             (
                 eef_pos[:3],
                 quat_xyzw,
                 [gripper_closedness],
             )
         )
-
+        
+        # Pad to 32 dimensions to match model's training data
+        proprio = np.zeros(32)
+        proprio[:8] = proprio_base
+        
         # H W C [0, 255]
         inputs = {
             "image": image,
@@ -170,14 +175,23 @@ class AiroaToSimplerFractalAdapter(BaseAdapter):
 
     def postprocess(self, outputs: dict) -> dict:
         action = outputs["actions"]
-        roll, pitch, yaw = action[3:6]
+        
+        # Handle multi-timestep actions - use only first timestep
+        if len(action.shape) > 1:
+            # If action is (timesteps, dims), take first timestep
+            action_first = action[0]
+        else:
+            # If action is already 1D, use as is
+            action_first = action
+            
+        roll, pitch, yaw = action_first[3:6]
         action_rotation_ax, action_rotation_angle = euler2axangle(roll, pitch, yaw)
 
         """from simpler octo inference: https://github.com/allenzren/SimplerEnv/blob/7d39d8a44e6d5ec02d4cdc9101bb17f5913bcd2a/simpler_env/policies/octo/octo_model.py#L187"""
         # trained with [0, 1], 0 for close, 1 for open
         # convert to -1 open, 1 close for simpler
 
-        gripper_action = action[-1]
+        gripper_action = action_first[-1]
 
         gripper_action = (gripper_action * 2) - 1  # [0, 1] -> [-1, 1] -1 close, 1 open
 
@@ -205,15 +219,15 @@ class AiroaToSimplerFractalAdapter(BaseAdapter):
             self.gripper_action_repeat = 0
             self.sticky_gripper_action = 0.0
 
-        action = np.concatenate(
+        final_action = np.concatenate(
             [
-                action[:3],
+                action_first[:3],
                 action_rotation_ax * action_rotation_angle,
                 [relative_gripper_action],
             ]
         )
 
         return {
-            "actions": action,
+            "actions": final_action,
             "terminate_episode": outputs["terminate_episode"],
         }
