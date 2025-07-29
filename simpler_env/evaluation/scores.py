@@ -55,7 +55,7 @@ def _run_single_evaluation(env_policy: AiroaBasePolicy, cfg: ManiSkill2Config, c
     """
     print(
         f"  ▶️  Running: env={cfg.env_name}, scene={cfg.scene_name}, "
-        f"kwargs={cfg.additional_env_build_kwargs.get('urdf_version') or cfg.additional_env_build_kwargs}"
+        f"kwargs={cfg.additional_env_build_kwargs.get('urdf_version') if cfg.additional_env_build_kwargs is not None else None}"
     )
     try:
         success_arr = maniskill2_evaluator(env_policy, cfg)
