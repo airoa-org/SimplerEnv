@@ -227,7 +227,6 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
                 **vm_base_kwargs,
                 env_name="PlaceIntoClosedTopDrawerCustomInScene-v0",
                 scene_name="dummy_drawer",
-                max_episode_steps=200,
                 additional_env_build_kwargs=additional_kwargs,
                 **setup,
             )
