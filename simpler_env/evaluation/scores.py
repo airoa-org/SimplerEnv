@@ -322,7 +322,7 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     print("=" * 80)
 
     # 各評価スイートを実行
-    # coke_sim, coke_vm = _evaluate_coke_can_grasping(env_policy, ckpt_path)
+    coke_sim, coke_vm = _evaluate_coke_can_grasping(env_policy, ckpt_path)
     drawer_sim, drawer_vm = _evaluate_drawer_placement(env_policy, ckpt_path)
     movenear_sim, movenear_vm = _evaluate_move_near(env_policy, ckpt_path)
 
