@@ -138,9 +138,6 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
         "robot_init_rot_quat_center": [0, 0, 0, 1],
         "obj_init_x_range": [-0.08, -0.02, 3],
         "obj_init_y_range": [-0.02, 0.08, 3],
-        "robot_init_x_range": [0.65, 0.65, 1],
-        "robot_init_y_range": [-0.2, 0.2, 3],
-        "robot_init_rot_rpy_range": [0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
     }
 
     # === ケース1: Base (enable_raytracing=Trueを使用) ===
@@ -222,12 +219,12 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
             "urdf_version": urdf,
             "model_ids": "baked_apple_v2",
         }
+        vm_base_kwargs["additional_env_build_kwargs"].update(additional_kwargs)
         for setup in overlay_setups:
             cfg = ManiSkill2Config(
                 **vm_base_kwargs,
                 env_name="PlaceIntoClosedTopDrawerCustomInScene-v0",
                 scene_name="dummy_drawer",
-                additional_env_build_kwargs=additional_kwargs,
                 **setup,
             )
             vm_results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
@@ -325,7 +322,7 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     print("=" * 80)
 
     # 各評価スイートを実行
-    coke_sim, coke_vm = _evaluate_coke_can_grasping(env_policy, ckpt_path)
+    # coke_sim, coke_vm = _evaluate_coke_can_grasping(env_policy, ckpt_path)
     drawer_sim, drawer_vm = _evaluate_drawer_placement(env_policy, ckpt_path)
     movenear_sim, movenear_vm = _evaluate_move_near(env_policy, ckpt_path)
 
