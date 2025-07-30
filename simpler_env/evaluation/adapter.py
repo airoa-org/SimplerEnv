@@ -1,8 +1,8 @@
 from typing import Dict, Optional, Sequence
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
 
 from simpler_env.utils.geometry import euler2axangle, mat2euler, quat2mat
 
@@ -41,15 +41,14 @@ class BaseAdapter:
         }
         return simpler_outputs, final_simpler_outputs
 
-    def _resize_image(self, image: np.ndarray) -> np.ndarray:
-        image = tf.image.resize(
-            image,
-            size=(256, 256),
-            method="lanczos3",
-            antialias=True,
-        )
-        image = tf.cast(tf.clip_by_value(tf.round(image), 0, 255), tf.uint8).numpy()
-        return image
+    def _resize_image(image: np.ndarray) -> np.ndarray:
+        # Lanczos3相当の補間でリサイズ（OpenCVのINTER_LANCZOS4を使用）
+        resized = cv2.resize(image, (256, 256), interpolation=cv2.INTER_LANCZOS4)
+
+        # 四捨五入して、0〜255にクリップ
+        resized = np.clip(np.round(resized), 0, 255).astype(np.uint8)
+
+        return resized
 
     def visualize_epoch(self, predicted_raw_actions: Sequence[np.ndarray], images: Sequence[np.ndarray], save_path: str) -> None:
         images = [self._resize_image(image) for image in images]
