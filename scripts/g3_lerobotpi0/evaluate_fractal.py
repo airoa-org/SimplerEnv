@@ -8,6 +8,7 @@ import cv2 as cv
 from simpler_env.evaluation.adapter import AiroaToSimplerFractalAdapter
 from simpler_env.evaluation.scores import run_comprehensive_evaluation
 from simpler_env.policies.base import AiroaBasePolicy
+from simpler_env.utils.geometry import euler2axangle
 
 
 def auto_model_fn(path):
@@ -50,6 +51,57 @@ class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
         return image
 
 
+class AiroaToSimplerFractalStickyActionAdapter(AiroaToSimplerFractalAdapter):
+    def __init__(self, policy):
+        super().__init__(policy)
+        self.sticky_gripper_num_repeat = 10 # same to lerobotpi0
+
+    def reset(self, task_description):
+        super().reset(task_description)
+        self.previous_gripper_action = None
+    
+    def postprocess(self, outputs: Dict) -> Dict:
+        action = outputs["actions"]
+        roll, pitch, yaw = action[3:6]
+        action_rotation_ax, action_rotation_angle = euler2axangle(roll, pitch, yaw)
+
+        current_gripper_action = action[-1]
+
+        if self.previous_gripper_action is None:
+            relative_gripper_action = 0
+            self.previous_gripper_action = current_gripper_action
+        else:
+            relative_gripper_action = self.previous_gripper_action - current_gripper_action
+
+        # switch to sticky closing
+        if np.abs(relative_gripper_action) > 0.5 and (not self.sticky_action_is_on):
+            self.sticky_action_is_on = True
+            self.sticky_gripper_action = relative_gripper_action
+            self.previous_gripper_action = current_gripper_action
+
+        if self.sticky_action_is_on:
+            self.gripper_action_repeat += 1
+            relative_gripper_action = self.sticky_gripper_action
+
+        if self.gripper_action_repeat == self.sticky_gripper_num_repeat:
+            self.sticky_action_is_on = False
+            self.gripper_action_repeat = 0
+            self.sticky_gripper_action = 0.0
+
+        action = np.concatenate(
+            [
+                action[:3],
+                action_rotation_ax * action_rotation_angle,
+                [relative_gripper_action],
+            ]
+        )
+
+        return {
+            "actions": action,
+            "terminate_episode": outputs["terminate_episode"],
+        }
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
     parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
@@ -65,7 +117,7 @@ if __name__ == "__main__":
         policy=PI0Policy.from_pretrained(ckpt_path)
     )
 
-    env_policy = AiroaToSimplerFractalAdapter(policy=policy)
+    env_policy = AiroaToSimplerFractalStickyActionAdapter(policy=policy)
 
     print("Policy initialized. Starting evaluation...")
 
