@@ -9,6 +9,7 @@ from simpler_env.evaluation.adapter import AiroaToSimplerFractalAdapter
 from simpler_env.evaluation.scores import run_comprehensive_evaluation
 from simpler_env.policies.base import AiroaBasePolicy
 from simpler_env.utils.geometry import euler2axangle
+from simpler_env.utils.action.action_ensemble import ActionEnsembler
 
 
 def auto_model_fn(path):
@@ -21,7 +22,16 @@ class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
     def __init__(self, policy):
         self.policy = policy
         self.pred_action_horizon = 4
+        self.action_ensemble = True
+        self.action_ensemble_temp = -0.8
         self.image_size = (224, 224)
+
+        if self.action_ensemble:
+            self.action_ensembler = ActionEnsembler(
+                self.pred_action_horizon, self.action_ensemble_temp
+            )
+        else:
+            self.action_ensembler = None
 
     def step(self, obs: Dict) -> Dict:
         image = self._resize_image(obs["image"])
@@ -34,7 +44,12 @@ class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
             "task": [prompt], 
         }
 
-        actions = self.policy.select_action(obs_lerobotpi0)[0][:self.pred_action_horizon].numpy()[0]
+        actions = self.policy.select_action(obs_lerobotpi0)[0][:self.pred_action_horizon].numpy()
+
+        if self.action_ensemble:
+            actions = self.action_ensembler.ensemble_action(actions)[None][0]
+        else:
+            actions = actions[0]
 
         outputs = {
             "actions": actions,
