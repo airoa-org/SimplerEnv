@@ -21,7 +21,7 @@ class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
     def __init__(self, policy):
         self.policy = policy
         self.pred_action_horizon = 4
-        self.image_size = (256, 256)
+        self.image_size = (224, 224)
 
     def step(self, obs: Dict) -> Dict:
         image = self._resize_image(obs["image"])
