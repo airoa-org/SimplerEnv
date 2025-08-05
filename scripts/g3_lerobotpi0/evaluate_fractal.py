@@ -20,12 +20,18 @@ def auto_model_fn(path):
 
 
 class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
-    def __init__(self, policy):
+    def __init__(
+        self,
+        policy,
+        pred_action_horizon: int,
+        action_ensemble: bool,
+        action_ensemble_temp: float,
+    ):
         self.policy = policy
         self.policy.eval()
-        self.pred_action_horizon = 4
-        self.action_ensemble = True
-        self.action_ensemble_temp = -0.8
+        self.pred_action_horizon = pred_action_horizon
+        self.action_ensemble = action_ensemble
+        self.action_ensemble_temp = action_ensemble_temp
         self.image_size = (224, 224)
 
         if self.action_ensemble:
@@ -124,7 +130,30 @@ class AiroaToSimplerFractalStickyActionAdapter(AiroaToSimplerFractalAdapter):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
-    parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
+    parser.add_argument(
+        "--ckpt-path",
+        type=str,
+        required=True,
+        help="Path to the checkpoint to evaluate.",
+    )
+    parser.add_argument(
+        "--action-ensemble",
+        type=bool,
+        default=True,
+        help="Whether to use action ensemble.",
+    )
+    parser.add_argument(
+        "--pred-action-horizon",
+        type=int,
+        default=4,
+        help="Prediction action horizon for the policy.",
+    )
+    parser.add_argument(
+        "--action-ensemble-temp",
+        type=float,
+        default=-0.8,
+        help="Temperature for action ensemble, higher values lead to more exploration.",
+    )
     return parser.parse_args()
 
 
@@ -134,7 +163,10 @@ if __name__ == "__main__":
 
     PI0Policy = auto_model_fn(ckpt_path)
     policy = FractalLerobotPi0ToAiroaPolicy(
-        policy=PI0Policy.from_pretrained(ckpt_path)
+        policy=PI0Policy.from_pretrained(ckpt_path),
+        action_ensemble=args.action_ensemble,
+        pred_action_horizon=args.pred_action_horizon,
+        action_ensemble_temp=args.action_ensemble_temp,
     )
 
     env_policy = AiroaToSimplerFractalStickyActionAdapter(policy=policy)
