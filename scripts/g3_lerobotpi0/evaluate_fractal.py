@@ -5,6 +5,7 @@ import time
 import torch
 import numpy as np
 import cv2 as cv
+from transformers import AutoTokenizer
 
 from simpler_env.evaluation.adapter import AiroaToSimplerFractalAdapter
 from simpler_env.evaluation.scores import run_comprehensive_evaluation
@@ -12,31 +13,25 @@ from simpler_env.policies.base import AiroaBasePolicy
 from simpler_env.utils.geometry import euler2axangle
 from simpler_env.utils.action.action_ensemble import ActionEnsembler
 
-
-def auto_model_fn(path):
-    import sys; sys.path.append(path) # noqa
-    from modeling_pi0 import PI0Policy
-    return PI0Policy
+from lerobot.policies.pi0.modeling_pi0 import PI0Policy
 
 
 class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
     def __init__(
         self,
         policy,
-        pred_action_horizon: int,
         action_ensemble: bool,
         action_ensemble_temp: float,
     ):
         self.policy = policy
         self.policy.eval()
-        self.pred_action_horizon = pred_action_horizon
         self.action_ensemble = action_ensemble
         self.action_ensemble_temp = action_ensemble_temp
         self.image_size = (224, 224)
 
         if self.action_ensemble:
             self.action_ensembler = ActionEnsembler(
-                self.pred_action_horizon, self.action_ensemble_temp
+                self.policy.config.n_action_steps, self.action_ensemble_temp
             )
         else:
             self.action_ensembler = None
@@ -55,12 +50,15 @@ class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
         }
 
         with torch.inference_mode():
-            actions = self.policy.select_action(obs_lerobotpi0)[0][:self.pred_action_horizon].cpu().numpy()
+            actions = self.policy.select_action(obs_lerobotpi0)[0].cpu().numpy()
 
         if self.action_ensemble:
-            actions = self.action_ensembler.ensemble_action(actions)[None][0]
-        else:
-            actions = actions[0]
+            action_chunk = [actions]
+            for _ in range(self.policy.config.n_action_steps-1):
+                actions = self.policy.select_action(obs_lerobotpi0)[0].cpu().numpy()
+                action_chunk.append(actions)
+            action_chunk = np.stack(action_chunk, axis=0)
+            actions = self.action_ensembler.ensemble_action(action_chunk)[None][0]
 
         outputs = {
             "actions": actions,
@@ -149,16 +147,10 @@ def parse_args():
         help="Whether to use action ensemble.",
     )
     parser.add_argument(
-        "--pred-action-horizon",
-        type=int,
-        default=4,
-        help="Prediction action horizon for the policy.",
-    )
-    parser.add_argument(
         "--action-ensemble-temp",
         type=float,
         default=-0.8,
-        help="Temperature for action ensemble, higher values lead to more exploration.",
+        help="Temperature for action ensemble.",
     )
     return parser.parse_args()
 
@@ -167,11 +159,13 @@ if __name__ == "__main__":
     args = parse_args()
     ckpt_path = args.ckpt_path
 
-    PI0Policy = auto_model_fn(ckpt_path)
+    policy = PI0Policy.from_pretrained(ckpt_path)
+    policy.language_tokenizer = AutoTokenizer.from_pretrained(ckpt_path)
+    policy.model.paligemma_with_expert.paligemma.language_model = policy.model.paligemma_with_expert.paligemma.language_model.model
+    policy.model.paligemma_with_expert.gemma_expert.model = policy.model.paligemma_with_expert.gemma_expert.model.base_model
     policy = FractalLerobotPi0ToAiroaPolicy(
-        policy=PI0Policy.from_pretrained(ckpt_path),
+        policy=policy,
         action_ensemble=args.action_ensemble,
-        pred_action_horizon=args.pred_action_horizon,
         action_ensemble_temp=args.action_ensemble_temp,
     )
 
