@@ -135,12 +135,6 @@ def parse_args():
         help="Path to the checkpoint to evaluate.",
     )
     parser.add_argument(
-        "--save-path",
-        type=str,
-        required=True,
-        help="Path to save the evaluation results.",
-    )
-    parser.add_argument(
         "--action-ensemble",
         type=bool,
         default=True,
@@ -173,7 +167,7 @@ if __name__ == "__main__":
 
     print("Policy initialized. Starting evaluation...")
 
-    final_scores = run_comprehensive_evaluation(env_policy=env_policy, ckpt_path=args.save_path)
+    final_scores = run_comprehensive_evaluation(env_policy=env_policy, ckpt_path=ckpt_path)
 
     print("\nEvaluation finished.")
     print(f"Final calculated scores: {final_scores}")
