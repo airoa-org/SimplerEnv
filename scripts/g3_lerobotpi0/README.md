@@ -4,7 +4,7 @@
 g3_shell -c4 --gres gpu:1
 git clone https://github.com/airoa-org/SimplerEnv.git
 cd SimplerEnv
-git checkout origin/bechmark/g3/lerobotpi0
+git checkout origin/bechmark/g3-fractal-lerobotpi0
 git submodule update --init --recursive
 
 conda create -n simpler_env_lerobotpi0 python=3.11
