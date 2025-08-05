@@ -1,5 +1,6 @@
 import argparse
 from typing import Dict
+import time
 
 import torch
 import numpy as np
@@ -21,6 +22,7 @@ def auto_model_fn(path):
 class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
     def __init__(self, policy):
         self.policy = policy
+        self.policy.eval()
         self.pred_action_horizon = 4
         self.action_ensemble = True
         self.action_ensemble_temp = -0.8
@@ -32,6 +34,8 @@ class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
             )
         else:
             self.action_ensembler = None
+        
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def step(self, obs: Dict) -> Dict:
         image = self._resize_image(obs["image"])
@@ -39,12 +43,13 @@ class FractalLerobotPi0ToAiroaPolicy(AiroaBasePolicy):
         state = obs["state"]
 
         obs_lerobotpi0 = {
-            "observation.state": torch.from_numpy(state).unsqueeze(0).float(),
-            "observation.images.image": torch.from_numpy(image / 255).permute(2, 0, 1).unsqueeze(0).float(),
+            "observation.state": torch.from_numpy(state).unsqueeze(0).float().to(self.device),
+            "observation.images.image": torch.from_numpy(image / 255).permute(2, 0, 1).unsqueeze(0).float().to(self.device),
             "task": [prompt], 
         }
 
-        actions = self.policy.select_action(obs_lerobotpi0)[0][:self.pred_action_horizon].numpy()
+        with torch.inference_mode():
+            actions = self.policy.select_action(obs_lerobotpi0)[0][:self.pred_action_horizon].cpu().numpy()
 
         if self.action_ensemble:
             actions = self.action_ensembler.ensemble_action(actions)[None][0]
