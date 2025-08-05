@@ -30,3 +30,5 @@ imgui.ini
 
 # Ignore openpi debug outputs
 results
+
+output

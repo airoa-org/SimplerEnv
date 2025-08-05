@@ -41,7 +41,7 @@ class BaseAdapter:
         }
         return simpler_outputs, final_simpler_outputs
 
-    def _resize_image(image: np.ndarray) -> np.ndarray:
+    def _resize_image(self, image: np.ndarray) -> np.ndarray:
         # Lanczos3相当の補間でリサイズ（OpenCVのINTER_LANCZOS4を使用）
         resized = cv2.resize(image, (256, 256), interpolation=cv2.INTER_LANCZOS4)
 
