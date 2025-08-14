@@ -28,10 +28,50 @@ def _run_single_evaluation(env_policy: AiroaBasePolicy, cfg: ManiSkill2Config, c
     else:
         kwargs_info = None
 
-    print(f"  ▶️  Running: env={cfg.env_name}, scene={cfg.scene_name}, " f"enable_rt={cfg.enable_raytracing}, kwargs={kwargs_info}")
+    print(f"  ▶️  Running: env={cfg.env_name}, scene={cfg.scene_name}, kwargs={kwargs_info}")
     success_arr = maniskill2_evaluator(env_policy, cfg)
     print(f"  ✅  Success Rate: {np.mean(success_arr):.2%}")
     return success_arr
+
+
+# def pick_coke_can_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[List[bool]]:
+#     print("\n--- pick_coke_can_visual_matching ---")
+#     results: List[List[bool]] = []
+
+#     coke_can_options_arr = [
+#         {"lr_switch": True},
+#         {"upright": True},
+#         {"laid_vertically": True},
+#     ]
+#     urdf_versions = [None, "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
+
+#     base_kwargs = dict(
+#         robot="google_robot_static",
+#         policy_setup="google_robot",
+#         control_freq=3,
+#         sim_freq=513,
+#         max_episode_steps=80,
+#         ckpt_path=ckpt_path,
+#         robot_init_x_range=[0.35, 0.35, 1],
+#         robot_init_y_range=[0.20, 0.20, 1],
+#         obj_init_x_range=[-0.35, -0.12, 5],
+#         obj_init_y_range=[-0.02, 0.42, 5],
+#         robot_init_rot_quat_center=[0, 0, 0, 1],
+#         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+#     )
+
+#     for urdf in urdf_versions:
+#         for opt in coke_can_options_arr:
+#             cfg = ManiSkill2Config(
+#                 **base_kwargs,
+#                 env_name="PickColaAndPlaceInDrawer-v0",
+#                 scene_name="google_pick_coke_can_1_v4",
+#                 rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
+#                 additional_env_build_kwargs={**opt, "urdf_version": urdf},
+#             )
+#             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+
+#     return results
 
 
 # ----------------------------------------------------------------------
@@ -367,7 +407,6 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[-0.08, -0.02, 3],
         obj_init_y_range=[-0.02, 0.08, 3],
-        enable_raytracing=True,
     )
 
     overlay_poses = [
@@ -499,7 +538,6 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[0, 0, 1],
         obj_init_y_range=[0, 0, 1],
-        enable_raytracing=True,
         scene_name="dummy_drawer",
     )
 
@@ -600,14 +638,14 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     vm_results += pick_coke_can_visual_matching(env_policy, ckpt_path)
     vm_results += move_near_visual_matching(env_policy, ckpt_path)
     vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path)
-    vm_results += drawer_visual_matching(env_policy, ckpt_path)  # ★ 追加
+    vm_results += drawer_visual_matching(env_policy, ckpt_path)
 
     # シミュレーション（variant_agg）
     sim_results: List[List[bool]] = []
     sim_results += pick_coke_can_variant_agg(env_policy, ckpt_path)
     sim_results += move_near_variant_agg(env_policy, ckpt_path)
     sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path)
-    sim_results += drawer_variant_agg(env_policy, ckpt_path)  # ★ 追加
+    sim_results += drawer_variant_agg(env_policy, ckpt_path)
 
     # ロバストスコア
     sim_score = calculate_robust_score(sim_results)
