@@ -14,7 +14,7 @@ if __name__ == "__main__":
     args = parse_args()
     ckpt_path = args.ckpt_path
 
-    policy = OpenPiFastInference(saved_model_path=ckpt_path, policy_setup="google_robot", action_scale=1.0)
+    policy = OpenPiFastInference(saved_model_path=ckpt_path, policy_setup="widowx_bridge", action_scale=1.0)
 
     print("Policy initialized. Starting evaluation...")
 

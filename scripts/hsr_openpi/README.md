@@ -1,7 +1,5 @@
 
 ```bash
-uv venv -p 3.11 scripts/openpi/.venv
-
 git clone https://github.com/airoa-org/hsr_openpi.git
 cd hsr_openpi
 git checkout remotes/origin/release
