@@ -8,7 +8,7 @@ GIT_LFS_SKIP_SMUDGE=1 uv pip install -e .
 cd ..
 
 source $(pwd)/scripts/openpi/.venv/bin/activate
-uv pip install -e .
+uv pip install -e . ".[torch]"
 
 
 huggingface-cli download --resume-download --repo-type model HaomingSong/openpi0-fractal-lora --local-dir /data/checkpoints/openpi0-fractal-lora
