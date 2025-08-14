@@ -1,3 +1,4 @@
+# scripts/bridge.sh
 ckpt_path=$1
 policy_model=$2
 action_ensemble_temp=$3

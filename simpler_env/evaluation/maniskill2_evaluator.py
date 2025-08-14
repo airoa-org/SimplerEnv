@@ -7,10 +7,7 @@ import os
 import numpy as np
 from transforms3d.euler import quat2euler
 
-from simpler_env.utils.env.env_builder import (
-    build_maniskill2_env,
-    get_robot_control_mode,
-)
+from simpler_env.utils.env.env_builder import build_maniskill2_env, get_robot_control_mode
 from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_obs_dict
 from simpler_env.utils.visualization import write_interval_video, write_video
 
@@ -124,9 +121,7 @@ def run_maniskill2_eval_single_episode(
 
         # step the environment
         obs, reward, done, truncated, info = env.step(
-            np.concatenate(
-                [action["world_vector"], action["rot_axangle"], action["gripper"]]
-            ),
+            np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
         )
 
         success = "success" if done else "failure"
@@ -138,9 +133,7 @@ def run_maniskill2_eval_single_episode(
 
         print(timestep, info)
 
-        image = get_image_from_maniskill2_obs_dict(
-            env, obs, camera_name=obs_camera_name
-        )
+        image = get_image_from_maniskill2_obs_dict(env, obs, camera_name=obs_camera_name)
         images.append(image)
         task_descriptions.append(task_description)
         timestep += 1
@@ -171,6 +164,7 @@ def run_maniskill2_eval_single_episode(
     video_path = f"{scene_name}/{control_mode}/{env_save_name}/rob_{robot_init_x}_{robot_init_y}_rot_{r:.3f}_{p:.3f}_{y:.3f}_rgb_overlay_{rgb_overlay_path_str}/{video_name}"
     video_path = os.path.join(logging_dir, video_path)
     write_video(video_path, images, fps=5)
+    print(f"Video saved to {video_path}")
 
     # save action trajectory
     action_path = video_path.replace(".mp4", ".png")
@@ -220,14 +214,8 @@ def maniskill2_evaluator(model, args):
                                 )
                             )
                 elif args.obj_variation_mode == "episode":
-                    for obj_episode_id in range(
-                        args.obj_episode_range[0], args.obj_episode_range[1]
-                    ):
-                        success_arr.append(
-                            run_maniskill2_eval_single_episode(
-                                obj_episode_id=obj_episode_id, **kwargs
-                            )
-                        )
+                    for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
+                        success_arr.append(run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs))
                 else:
                     raise NotImplementedError()
 

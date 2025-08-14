@@ -60,7 +60,6 @@ class LerobotPiFastInference:
 
         # TODO: add pi0 loading ...
         PI0Policy = auto_model_fn(saved_model_path)
-        print(f"DADSADADAS: {torch.cuda.is_available()}")
         self.vla = PI0Policy.from_pretrained(saved_model_path)
         self.vla.to(self.device)
         self.vla.reset()
