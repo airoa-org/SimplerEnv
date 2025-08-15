@@ -44,13 +44,12 @@ def _run_single_evaluation(env_policy: AiroaBasePolicy, cfg: ManiSkill2Config, c
     """
     単一の評価設定でmaniskill2_evaluatorを実行し、結果を返す内部ヘルパー。
     """
-    print(
-        f"  ▶️  Running: env={cfg.env_name}, scene={cfg.scene_name}, "
-        f"kwargs={cfg.additional_env_build_kwargs.get('urdf_version') or cfg.additional_env_build_kwargs}"
-    )
+    build = getattr(cfg, "additional_env_build_kwargs", None) or {}
+    print(f"  ▶️  Running: env={cfg.env_name}, scene={cfg.scene_name}, kwargs={build.get('urdf_version') or build}")
     try:
         success_arr = maniskill2_evaluator(env_policy, cfg)
-        print(f"  ✅  Success Rate: {np.mean(success_arr):.2%}")
+        rate = float(np.mean(success_arr)) if len(success_arr) else 0.0
+        print(f"  ✅  Success Rate: {rate:.2%}")
         return success_arr
     except Exception as e:
         print(f"  ❌  An error occurred: {e}")
@@ -214,14 +213,18 @@ def _evaluate_drawer_placement(env_policy: AiroaBasePolicy, ckpt_path: str) -> T
             "model_ids": "baked_apple_v2",
         }
         for setup in overlay_setups:
-            cfg = ManiSkill2Config(
-                **vm_base_kwargs,
-                env_name="PlaceIntoClosedTopDrawerCustomInScene-v0",
-                scene_name="dummy_drawer",
-                max_episode_steps=200,
-                additional_env_build_kwargs=additional_kwargs,
-                **setup,
-            )
+            kwargs = vm_base_kwargs.copy()
+
+            kwargs["env_name"] = "PlaceIntoClosedTopDrawerCustomInScene-v0"
+            kwargs["scene_name"] = "dummy_drawer"
+
+            merged_build = kwargs.get("additional_env_build_kwargs", {}).copy()
+            merged_build.update(additional_kwargs)
+            kwargs["additional_env_build_kwargs"] = merged_build
+
+            kwargs.update(setup)
+
+            cfg = ManiSkill2Config(**kwargs)
             vm_results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     return sim_results, vm_results
@@ -250,10 +253,26 @@ def _evaluate_move_near(env_policy: AiroaBasePolicy, ckpt_path: str) -> Tuple[Li
     # --- 3a. Simulation ---
     print("\n[Section 3a: Simulation Variants]")
     sim_eval_configs = [
-        {"env_name": "MoveNearGoogleInScene-v0", "scene_name": "google_pick_coke_can_1_v4"},
-        {"env_name": "MoveNearGoogleInScene-v0", "scene_name": "google_pick_coke_can_1_v4", "additional_env_build_kwargs": {"no_distractor": True}},
-        {"env_name": "MoveNearGoogleInScene-v0", "scene_name": "google_pick_coke_can_1_v4_alt_background"},
-        {"env_name": "MoveNearGoogleInScene-v0", "scene_name": "google_pick_coke_can_1_v4_alt_background_2"},
+        {   
+            "env_name": "MoveNearGoogleInScene-v0", 
+            "scene_name": "google_pick_coke_can_1_v4",
+            "additional_env_build_kwargs": {}
+        },
+        {   
+            "env_name": "MoveNearGoogleInScene-v0", 
+            "scene_name": "google_pick_coke_can_1_v4", 
+            "additional_env_build_kwargs": {"no_distractor": True}
+        },
+        {
+            "env_name": "MoveNearGoogleInScene-v0", 
+            "scene_name": "google_pick_coke_can_1_v4_alt_background",
+            "additional_env_build_kwargs": {}
+        },
+        {   
+            "env_name": "MoveNearGoogleInScene-v0", 
+            "scene_name": "google_pick_coke_can_1_v4_alt_background_2",
+            "additional_env_build_kwargs": {}
+        },
         {
             "env_name": "MoveNearGoogleInScene-v0",
             "scene_name": "google_pick_coke_can_1_v4",
@@ -264,13 +283,31 @@ def _evaluate_move_near(env_policy: AiroaBasePolicy, ckpt_path: str) -> Tuple[Li
             "scene_name": "google_pick_coke_can_1_v4",
             "additional_env_build_kwargs": {"slightly_brighter_lighting": True},
         },
-        {"env_name": "MoveNearGoogleInScene-v0", "scene_name": "Baked_sc1_staging_objaverse_cabinet1_h870"},
-        {"env_name": "MoveNearGoogleInScene-v0", "scene_name": "Baked_sc1_staging_objaverse_cabinet2_h870"},
-        {"env_name": "MoveNearAltGoogleCameraInScene-v0", "scene_name": "google_pick_coke_can_1_v4"},
-        {"env_name": "MoveNearAltGoogleCamera2InScene-v0", "scene_name": "google_pick_coke_can_1_v4"},
+        {   
+            "env_name": "MoveNearGoogleInScene-v0", 
+            "scene_name": "Baked_sc1_staging_objaverse_cabinet1_h870",
+            "additional_env_build_kwargs": {}
+        },
+        {
+            "env_name": "MoveNearGoogleInScene-v0", 
+            "scene_name": "Baked_sc1_staging_objaverse_cabinet2_h870",
+            "additional_env_build_kwargs": {}
+        },
+        {
+            "env_name": "MoveNearAltGoogleCameraInScene-v0", 
+            "scene_name": "google_pick_coke_can_1_v4",
+            "additional_env_build_kwargs": {}
+        },
+        {
+            "env_name": "MoveNearAltGoogleCamera2InScene-v0", 
+            "scene_name": "google_pick_coke_can_1_v4",
+            "additional_env_build_kwargs": {}
+        },
     ]
     for config_update in sim_eval_configs:
         cfg = ManiSkill2Config(**base_kwargs, **config_update)
+        if cfg.additional_env_build_kwargs is None:
+            cfg.additional_env_build_kwargs = {}
         sim_results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # --- 3b. Visual Matching (Overlay) ---

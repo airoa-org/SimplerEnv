@@ -19,6 +19,17 @@ import simpler_env
 from simpler_env import ENVIRONMENTS
 from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_obs_dict
 
+def _get_attr(env, name, default=None):
+    v = env.get_wrapper_attr(name)
+    if v is None:
+        v = getattr(env.unwrapped, name, default)
+    return v
+
+def _call_method(env, name, *args, **kwargs):
+    fn = _get_attr(env, name, None)
+    return fn(*args, **kwargs) if callable(fn) else None
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--policy", default="rt1", choices=["rt1", "octo-base", "octo-small"])
@@ -82,9 +93,9 @@ else:
 success_arr = []
 for ep_id in range(args.n_trajs):
     obs, reset_info = env.reset()
-    instruction = env.get_language_instruction()
+    instruction = _call_method(env, 'get_language_instruction')
     # for long-horizon environments, we check if the current subtask is the final subtask
-    is_final_subtask = env.is_final_subtask() 
+    is_final_subtask = bool(_get_attr(env, 'is_final_subtask', False))
 
     model.reset(instruction)
     print(instruction)
@@ -101,18 +112,18 @@ for ep_id in range(args.n_trajs):
             if not is_final_subtask:
                 # advance the environment to the next subtask
                 predicted_terminated = False
-                env.advance_to_next_subtask()
+                _call_method(env, 'advance_to_next_subtask')
 
         obs, reward, success, truncated, info = env.step(
             np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
         )
         print(timestep, info)
-        new_instruction = env.get_language_instruction()
+        new_instruction = _call_method(env, 'get_language_instruction')
         if new_instruction != instruction:
             # update instruction for long horizon tasks
             instruction = new_instruction
             print(instruction)
-        is_final_subtask = env.is_final_subtask() 
+        is_final_subtask = bool(_get_attr(env, 'is_final_subtask', False))
         # update image observation
         image = get_image_from_maniskill2_obs_dict(env, obs)
         images.append(image)
