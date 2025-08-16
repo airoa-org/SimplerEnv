@@ -1,10 +1,12 @@
 import argparse
 from typing import Dict
+from pathlib import Path
 
 import numpy as np
 from openpi.policies import policy_config as _policy_config
 from openpi.training import config as _config
 from openpi_client import action_chunk_broker
+from openpi.shared import normalize as _normalize
 
 from simpler_env.evaluation.adapter import AiroaToSimplerFractalAdapter
 from simpler_env.evaluation.scores import run_comprehensive_evaluation
@@ -33,7 +35,9 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     ckpt_path = args.ckpt_path
-
+    # Load norm_stats directly from the actual location
+    norm_stats_path = Path(ckpt_path) / "assets" / "data" / "fractal"
+    norm_stats = _normalize.load(norm_stats_path)
     policy = OpenpiToAiroaPolicy(
         policy=action_chunk_broker.ActionChunkBroker(
             policy=_policy_config.create_trained_policy(
@@ -41,6 +45,7 @@ if __name__ == "__main__":
                 ckpt_path,
             ),
             action_horizon=10,
+            norm_stats = norm_stats
         ),
     )
 
