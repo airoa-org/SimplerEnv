@@ -15,7 +15,7 @@ for model_type in "${octo_models[@]}"; do
     echo "Evaluating Octo model: ${model_type}"
     echo "=========================================="
     
-    CUDA_VISIBLE_DEVICES=${gpu_id} python /home/group_25b505/group_4/members/kuramitsu/geniac25_team4_codebase/models/SimplerEnv/scripts/octo/evaluate_octo.py \
+    CUDA_VISIBLE_DEVICES=${gpu_id} python /root/workspace/SimplerEnv/scripts/octo/evaluate_octo.py \
         --model-type "${model_type}" \
         --policy-setup google_robot \
         --action-scale 1.0 \
