@@ -14,7 +14,11 @@ class MileToAiroaPolicy(AiroaBasePolicy):
         self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
 
         # Load checkpoint and rebuild model from saved config
-        checkpoint = torch.load(ckpt_path, map_location=self.device, weights_only=False)
+        try:
+            checkpoint = torch.load(ckpt_path, map_location=self.device, weights_only=False)
+        except TypeError:
+            # Older torch versions do not support weights_only
+            checkpoint = torch.load(ckpt_path, map_location=self.device)
 
         if isinstance(checkpoint, dict) and "config" in checkpoint and "model_state_dict" in checkpoint:
             # Newer training util format
@@ -50,8 +54,8 @@ class MileToAiroaPolicy(AiroaBasePolicy):
             img = np.asarray(image)
             if img.ndim == 3 and img.shape[-1] == 4:
                 img = img[..., :3]
-            # HWC uint8 -> CHW float32 in [0, 1]
-            img_t = torch.from_numpy(img).to(torch.float32) / 255.0
+            # HWC uint8 -> CHW float32 (match training scale which uses raw 0..255)
+            img_t = torch.from_numpy(img.astype(np.float32))
             img_t = img_t.permute(2, 0, 1).contiguous()
 
         # Batch and sequence dims: (B=1, S=1, C, H, W)
