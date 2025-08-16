@@ -48,10 +48,9 @@ python -c "import tensorflow as tf; print(f'TensorFlow: {tf.__version__}')" 2>/d
 python -c "import tensorflow_hub" 2>/dev/null || pip install tensorflow_hub==0.16.0
 python -c "import tf_agents" 2>/dev/null || pip install tf-agents==0.19.0
 
-# Octo依存関係
-python -c "import jax" 2>/dev/null || pip install "jax>=0.4.20"
-python -c "import flax" 2>/dev/null || pip install "flax>=0.7.5"
-python -c "import optax" 2>/dev/null || pip install "optax>=0.1.5"
+# Octo依存関係（互換バージョンで統一）
+echo "JAX/Flax互換バージョンをインストール中..."
+pip install --no-cache-dir "jax==0.4.24" "jaxlib==0.4.24" "flax==0.7.5" "optax==0.2.2" "chex==0.1.86"
 python -c "import distrax" 2>/dev/null || pip install "distrax>=0.1.5"
 
 # Octoパッケージ
@@ -119,4 +118,9 @@ echo "🎉 統一RT-1とOcto評価環境セットアップ完了！"
 echo "=================================================================="
 echo ""
 echo "評価実行方法:"
-echo "bash /root/workspace/SimplerEnv/run_evaluation.sh"
+echo "RT-1評価: bash /root/workspace/SimplerEnv/run_evaluation.sh"
+echo "WidowX評価: bash /root/workspace/SimplerEnv/scripts/octo/run_widowx_evaluation.sh"
+echo ""
+echo "WidowXタスク例:"
+echo "  なすをバスケットに: bash scripts/octo/run_widowx_evaluation.sh octo-base 4 bridge_table_1_v2 0 1"
+echo "  全タスク実行: bash scripts/octo/run_widowx_evaluation.sh octo-base 4 bridge_table_1_v2 0 all"
