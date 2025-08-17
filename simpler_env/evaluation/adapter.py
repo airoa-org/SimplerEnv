@@ -99,6 +99,7 @@ class AiroaToSimplerBridgeAdapter(BaseAdapter):
             [
                 proprio[:3],
                 rpy_bridge_converted,
+                np.zeros(1),
                 [gripper_openness],
             ]
         )
