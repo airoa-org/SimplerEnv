@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # Lerobot-specific modules for policy construction and logging
-# from lerobot.common.policies.factory import make_policy
 from lerobot.common.logger import log_output_dir
 from lerobot.common.utils.utils import (
     init_logging,          # Initialize logging configuration
     set_global_seed,       # Set global random seed for reproducibility
-    # get_safe_torch_device, # Select safe torch device (e.g., GPU/CPU)
 )
 # Configuration parser and schema definition for evaluation pipeline
 from lerobot.configs import parser
@@ -42,9 +40,6 @@ def main(cfg: EvalPipelineConfig) -> None:
     # Log the entire configuration in a pretty format
     logging.info(pformat(asdict(cfg)))
 
-    # # Select a safe device (CPU/GPU) for PyTorch operations
-    # device = get_safe_torch_device(cfg.device, log=True)
-
     # Enable cuDNN benchmark for improved performance
     torch.backends.cudnn.benchmark = True
     # Allow TensorFloat-32 (TF32) for matrix multiplications (CUDA)
@@ -63,12 +58,6 @@ def main(cfg: EvalPipelineConfig) -> None:
     # Construct the policy (model)
     logging.info("Making policy...")
     policy = Group5PiInference(cfg)
-
-    # env_policy = make_policy(
-    #     cfg=cfg.policy,
-    #     device=device,
-    #     env_cfg=cfg.env,
-    # )
 
     logging.info("Policy initialized. Starting evaluation...")
     scores = run_comprehensive_evaluation(env_policy=policy, ckpt_path=cfg.policy.pretrained_path)
