@@ -103,83 +103,86 @@ class Group5PiInference(AiroaBasePolicy):
         rtype = self.cfg.env.type  # robot type: "google_robot" or "widowx_bridge"
 
         # --- Image preprocessing ---
-        assert image.dtype == np.uint8, "Image must be uint8"
-        image = torch.from_numpy(image)
+        assert image.dtype == np.uint8, "Image must be uint8"  # Ensure correct input type
+        image = torch.from_numpy(image)  # Convert numpy image to PyTorch tensor
         h, w, c = image.shape
-        assert c < h and c < w, f"Expect channel-last image, got {image.shape=}"
-        image = einops.rearrange(image, "h w c -> c h w").contiguous()
-        image = image.type(torch.float32) / 255.0  # Normalize to [0,1]
+        assert c < h and c < w, f"Expect channel-last image, got {image.shape=}"  # Ensure HWC format
+        image = einops.rearrange(image, "h w c -> c h w").contiguous()  # Rearrange to CHW format
+        image = image.type(torch.float32) / 255.0  # Normalize pixel values to [0,1]
 
         # --- Construct observation dict ---
         observation = {}
-        eef_pos = kwargs.get("eef_pos", None)
+        eef_pos = kwargs.get("eef_pos", None)  # Get end-effector pose from kwargs
 
         if rtype == "google_robot":
             # For Google Robot: interpret gripper closedness as 1 - width
             gripper_width = eef_pos[:7].reshape(1, -1)
-            gripper_closedness = 1 - gripper_width
+            gripper_closedness = 1 - gripper_width  # Convert width to closedness value
             if len(gripper_closedness.shape) == 1:
-                gripper_closedness = gripper_closedness[:, None]
+                gripper_closedness = gripper_closedness[:, None]  # Ensure proper shape
 
+            # Concatenate pose and gripper state
             pose = np.concatenate((eef_pos[:7].reshape(1, -1), gripper_closedness), axis=-1)
             pose = torch.from_numpy(pose).float()
-            state = quat_to_rot6d(pose)  # Convert quaternion to 6D rotation
+            state = quat_to_rot6d(pose)  # Convert quaternion representation to 6D rotation
             observation["observation.state"] = state
-            observation["observation.overhead_camera"] = image.unsqueeze(0)
+            observation["observation.overhead_camera"] = image.unsqueeze(0)  # Add image to obs
 
+            # Normalize gripper action into [-1, 1] range
             def normalize_gripper_action(gripper_action):
                 return - np.clip(2.0 * gripper_action - 1.0, -1, 1)
 
         else:  # widowx_bridge robot
+            # For WidowX: use width directly as gripper closedness
             gripper_width = eef_pos[:7].reshape(1, -1)
             gripper_closedness = gripper_width
             if len(gripper_closedness.shape) == 1:
                 gripper_closedness = gripper_closedness[:, None]
 
+            # Concatenate pose and gripper state
             pose = np.concatenate((eef_pos[:7].reshape(1, -1), gripper_closedness), axis=-1)
             pose = torch.from_numpy(pose).float()
-            state = quat_to_rot6d(pose)
+            state = quat_to_rot6d(pose)  # Convert quaternion to 6D rotation
             observation["observation.state"] = state
-            observation["observation.images.3rd_view_camera"] = image.unsqueeze(0)
+            observation["observation.images.3rd_view_camera"] = image.unsqueeze(0)  # 3rd-view image
 
+            # Normalize gripper action into [-1, 1] range
             def normalize_gripper_action(gripper_action):
                 return np.clip(2.0 * gripper_action - 1.0, -1, 1)
 
-        # Move observation tensors to device
+        # Move all observation tensors to the correct device (GPU/CPU)
         observation = {key: observation[key].to(self.device, non_blocking=True) for key in observation}
-        observation["task"] = [task_description]
+        observation["task"] = [task_description]  # Add task description
 
         # --- Policy inference ---
-        with torch.inference_mode():
-            raw_actions = self.policy.select_action(observation)
-            raw_actions = raw_actions.detach().cpu()
+        with torch.inference_mode():  # Disable gradient computation
+            raw_actions = self.policy.select_action(observation)  # Forward pass through policy
+            raw_actions = raw_actions.detach().cpu()  # Move actions to CPU for further processing
         
+        # Convert rotation representation from 6D to axis-angle
         actions = rot6d_to_axis_angle(raw_actions).numpy()
+        # Normalize gripper action using robot-specific normalization
         actions[:, -1] = normalize_gripper_action(actions[:, -1])
-        actions = actions.squeeze(0)
+        actions = actions.squeeze(0)  # Remove batch dimension
         
-            # # Adjust gripper control depending on robot type
-            # if rtype == "google_robot":
-            #     actions[:, -1] = -np.clip(2.0 * actions[:, -1] - 1.0, -1, 1)
-            # else:
-            #     actions[:, -1] = np.clip(2.0 * actions[:, -1] - 1.0, -1, 1)
-            # actions = actions.squeeze(0)  # (1,7) -> (7,)
-
         # --- Build return dicts ---
+        # Raw action dictionary (policy output without heavy post-processing)
         raw_action = {
-            "world_vector": actions[:3],
-            "rotation_delta": actions[3:6],
-            "open_gripper": actions[6:7],  # [0,1] range: 1=open, 0=close
+            "world_vector": actions[:3],        # Desired translation in world coordinates
+            "rotation_delta": actions[3:6],     # Rotation as axis-angle delta
+            "open_gripper": actions[6:7],       # Gripper open/close command
         }
 
+        # Processed action dictionary (ready for execution by robot)
         action = {
             "world_vector": actions[:3],
             "rot_axangle": actions[3:6],
-            "gripper": actions[6:7],
-            "terminate_episode": np.array([0.0])  # no chunking
+            "gripper": actions[6:7],            # Gripper open=1, close=0
+            "terminate_episode": np.array([0.0])  # Always continue (no early termination)
         }
 
         return raw_action, action
+
 
     def reset(self, task_description: str) -> None:
         """
