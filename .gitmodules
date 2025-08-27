@@ -3,3 +3,6 @@
 	url = https://github.com/airoa-org/ManiSkill2_real2sim.git
 	# url = https://github.com/allenzren/ManiSkill2_real2sim.git
 	# url = https://github.com/simpler-env/ManiSkill2_real2sim
+[submodule "geniac25_team5_codebase"]
+	path = geniac25_team5_codebase
+	url = git@github.com:airoa-org/geniac25_team5_codebase.git
