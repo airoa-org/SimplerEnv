@@ -1,7 +1,7 @@
 #!/bin/bash
 eval_type=pi0-bridge
 robot_type=widowx # google_robot # widowx
-ckpt=010000
+ckpt=020000
 task="SimplerEnv"
 DATA_PATH=./outputs
 echo ${DATA_PATH}/${eval_type}/checkpoints/${ckpt}/pretrained_model
