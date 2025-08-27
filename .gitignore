@@ -5,7 +5,7 @@ _ext
 *.so
 .venv/
 results/
-outputs/
+outputs/*
 checkpoints/
 build/
 dist/

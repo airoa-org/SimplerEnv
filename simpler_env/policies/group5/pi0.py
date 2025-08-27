@@ -126,7 +126,7 @@ class Group5PiInference(AiroaBasePolicy):
             pose = torch.from_numpy(pose).float()
             state = quat_to_rot6d(pose)  # Convert quaternion representation to 6D rotation
             observation["observation.state"] = state
-            observation["observation.overhead_camera"] = image.unsqueeze(0)  # Add image to obs
+            observation["observation.images.overhead_camera"] = image.unsqueeze(0)  # Add image to obs
 
             # Normalize gripper action into [-1, 1] range
             def normalize_gripper_action(gripper_action):
@@ -182,7 +182,6 @@ class Group5PiInference(AiroaBasePolicy):
         }
 
         return raw_action, action
-
 
     def reset(self, task_description: str) -> None:
         """

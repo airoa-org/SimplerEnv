@@ -1,6 +1,6 @@
 #!/bin/bash
 eval_type=pi0-bridge
-robot_type=widowx
+robot_type=google_robot # widowx
 ckpt=010000
 task="SimplerEnv"
 DATA_PATH=./outputs
