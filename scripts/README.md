@@ -1,0 +1,383 @@
+- 共通オプション
+    - urdf_version
+        - None: 白
+        - recolor_tabletop_visual_matching_1: 黄色
+        - recolor_tabletop_visual_matching_2: 少し黄色
+        - recolor_cabinet_visual_matching_1: 少し白
+    - baked*: リアルなテクスチャを張ったという意味？
+- pick_coke_can_visual_matching
+    - robot_init_x_range=[0.35, 0.35, 1]
+    - robot_init_y_range=[0.20, 0.20, 1]
+    - obj_init_x_range=[-0.35, -0.12, 5]
+    - obj_init_y_range=[-0.02, 0.42, 5]
+    - env_options:
+        - lr_switch: （コーラのinital orientation）横方向に寝かせたような姿勢
+        - upright: （コーラのinital orientation）直立した姿勢
+        - laid_vertically:（コーラのinital orientation） 縦方向に寝かせた姿勢
+        - urdf_version
+    - env_name
+        - GraspSingleOpenedCokeCanInScene-v0
+    - scene_name
+        - google_pick_coke_can_1_v4
+    - rgb_overlay_path
+        - ./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png
+- pick_coke_can_variant_agg
+    - robot_init_x_range=[0.35, 0.35, 1]
+    - robot_init_y_range=[0.20, 0.20, 1]
+    - obj_init_x_range=[-0.35, -0.12, 5]
+    - obj_init_y_range=[-0.02, 0.42, 5]
+    - env_options:
+        - lr_switch
+        - upright
+        - laid_vertically
+        - urdf_version
+        - (distractor_config = “more, less”)
+            障害物として全て追加される
+            - opened_ 7up_can （開いたセブンアップの缶）
+            - opened_sprite_can （開いたスプライトの缶）
+            - sponge （スポンジ）
+            - orange （オレンジ）
+            - opened_fanta_can （開いたファンタの缶）
+            - bridge_spoon_generated_modified
+        - (slightly_darker_lighting)
+            - true/false
+    - env_name
+        - GraspSingleOpenedCokeCanInScene-v0
+            - 開封済みコカ・コーラ缶の把持
+        - GraspSingleOpenedCokeCanDistractorInScene-v0
+            - 妨害オブジェクトを追加した、より難易度の高い環境
+            - ターゲットである開封済みのコカ・コーラ缶を正しく識別
+        - GraspSingleOpenedCokeCanAltGoogleCameraInScene-v0
+            - カメラアングルを変更した環境
+        - GraspSingleOpenedCokeCanAltGoogleCamera2InScene-v0
+            - さらに別のカメラアングル
+    - scene_name
+        - google_pick_coke_can_1_v4
+        - Baked_sc1_staging_objaverse_cabinet1_h870
+        - Baked_sc1_staging_objaverse_cabinet2_h870
+        - google_pick_coke_can_1_v4_alt_background
+        - google_pick_coke_can_1_v4_alt_background_2
+- pick_coke_can_visual_matching
+    - robot_init_x_range=[0.35, 0.35, 1]
+    - robot_init_y_range=[0.20, 0.20, 1]
+    - obj_init_x_range=[-0.35, -0.12, 5]
+    - obj_init_y_range=[-0.02, 0.42, 5]
+    - env_options:
+        - lr_switch: （コーラのinitial orientation）横方向に寝かせたような姿勢
+        - upright: （コーラのinitial orientation）直立した姿勢
+        - laid_vertically:（コーラのinitial orientation） 縦方向に寝かせた姿勢
+        - urdf_version
+    - env_name: GraspSingleOpenedCokeCanInScene-v0
+    - scene_name: google_pick_coke_can_1_v4
+    - rgb_overlay_path: ./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png
+- pick_coke_can_variant_agg
+    - robot_init_x_range=[0.35, 0.35, 1]
+    - robot_init_y_range=[0.20, 0.20, 1]
+    - obj_init_x_range=[-0.35, -0.12, 5]
+    - obj_init_y_range=[-0.02, 0.42, 5]
+    - env_options:
+        - lr_switch, upright, laid_vertically
+        - distractor_config = "more, less" （障害物として追加）
+        - slightly_darker_lighting, slightly_brighter_lighting
+    - env_name:
+        - GraspSingleOpenedCokeCanInScene-v0 （開封済みコカ・コーラ缶の把持）
+        - GraspSingleOpenedCokeCanDistractorInScene-v0 （妨害オブジェクト追加）
+        - GraspSingleOpenedCokeCanAltGoogleCameraInScene-v0, GraspSingleOpenedCokeCanAltGoogleCamera2InScene-v0 （カメラアングル変更）
+    - scene_name:
+        - google_pick_coke_can_1_v4
+        - Baked_sc1_staging_objaverse_cabinet1_h870, Baked_sc1_staging_objaverse_cabinet2_h870
+        - google_pick_coke_can_1_v4_alt_background, google_pick_coke_can_1_v4_alt_background_2
+- move_near_variant_agg
+    - robot_init_x_range=[0.35, 0.35, 1]
+    - robot_init_y_range=[0.21, 0.21, 1]
+    - obj_variation_mode="episode"
+    - obj_episode_range=[0, 60]
+    - robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1]
+    - env_options:
+        - no_distractor: True （妨害オブジェクトなし）
+        - slightly_darker_lighting, slightly_brighter_lighting
+    - env_name:
+        - MoveNearGoogleInScene-v0 （オブジェクトを別のオブジェクトの近くに移動）
+        - MoveNearAltGoogleCameraInScene-v0, MoveNearAltGoogleCamera2InScene-v0 （カメラアングル変更）
+    - scene_name:
+        - google_pick_coke_can_1_v4
+        - google_pick_coke_can_1_v4_alt_background, google_pick_coke_can_1_v4_alt_background_2
+        - Baked_sc1_staging_objaverse_cabinet1_h870, Baked_sc1_staging_objaverse_cabinet2_h870
+- move_near_visual_matching
+    - robot_init_x_range=[0.35, 0.35, 1]
+    - robot_init_y_range=[0.21, 0.21, 1]
+    - obj_variation_mode="episode"
+    - obj_episode_range=[0, 60]
+    - robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1]
+    - env_options:
+        - urdf_version
+    - env_name: MoveNearGoogleBakedTexInScene-v0
+    - scene_name: google_pick_coke_can_1_v4
+    - rgb_overlay_path: ./ManiSkill2_real2sim/data/real_inpainting/google_move_near_real_eval_1.png
+    - additional_env_save_tags: "baked_except_bpb_orange"
+- put_in_drawer_variant_agg
+    - max_episode_steps=200
+    - robot_init_x_range=[0.65, 0.65, 1]
+    - robot_init_y_range=[-0.2, 0.2, 3]
+    - obj_init_x_range=[-0.08, -0.02, 3]
+    - obj_init_y_range=[-0.02, 0.08, 3]
+    - env_options:
+        - model_ids: "apple" （リンゴオブジェクトを引き出しに配置）
+        - shader_dir: "rt" （レイトレーシング）
+        - light_mode: "brighter", "darker" （照明調整）
+        - station_name: "mk_station2", "mk_station3" （異なるキャビネット）
+    - env_name: PlaceIntoClosedTopDrawerCustomInScene-v0 （閉じた上段引き出しにオブジェクトを配置）
+    - scene_name:
+        - frl_apartment_stage_simple （基本シーン、レイトレーシング有効）
+        - modern_bedroom_no_roof, modern_office_no_roof （背景変更）
+    - enable_raytracing=True
+- put_in_drawer_visual_matching
+    - max_episode_steps=200
+    - obj_init_x_range=[-0.08, -0.02, 3]
+    - obj_init_y_range=[-0.02, 0.08, 3]
+    - env_options:
+        - urdf_version
+        - station_name: "mk_station_recolor"
+        - light_mode: "simple"
+        - disable_bad_material: True
+        - model_ids: "baked_apple_v2"
+    - env_name: PlaceIntoClosedTopDrawerCustomInScene-v0
+    - scene_name: dummy_drawer
+    - overlay_poses: 3つの異なる位置（A0, B0, C0）
+        - A0: robot_init=[0.644, -0.179], rot=-0.03
+        - B0: robot_init=[0.652, 0.009], rot=0
+        - C0: robot_init=[0.665, 0.224], rot=0
+    - rgb_overlay_path: ./ManiSkill2_real2sim/data/real_inpainting/open_drawer_{a0,b0,c0}.png
+- drawer_variant_agg
+    - max_episode_steps=113
+    - robot_init_x_range=[0.65, 0.85, 3]
+    - robot_init_y_range=[-0.2, 0.2, 3]
+    - obj_init_x_range=[0, 0, 1], obj_init_y_range=[0, 0, 1]
+    - env_options:
+        - shader_dir: "rt"
+        - light_mode: "brighter", "darker"
+        - station_name: "mk_station2", "mk_station3"
+    - env_name:
+        - OpenTopDrawerCustomInScene-v0, OpenMiddleDrawerCustomInScene-v0, OpenBottomDrawerCustomInScene-v0 （引き出しを開く）
+        - CloseTopDrawerCustomInScene-v0, CloseMiddleDrawerCustomInScene-v0, CloseBottomDrawerCustomInScene-v0 （引き出しを閉じる）
+    - scene_name:
+        - frl_apartment_stage_simple （基本シーン、レイトレーシング有効）
+        - modern_bedroom_no_roof, modern_office_no_roof （背景変更）
+    - enable_raytracing=True
+- drawer_visual_matching
+    - max_episode_steps=113
+    - obj_init_x_range=[0, 0, 1], obj_init_y_range=[0, 0, 1]
+    - env_options:
+        - urdf_version
+        - station_name: "mk_station_recolor"
+        - light_mode: "simple"
+        - disable_bad_material: True
+    - env_name: 上記のdrawer_variant_aggと同じ6つの環境
+    - scene_name: dummy_drawer
+    - overlay_poses: 9つの異なる位置（A0/A1/A2/B0/B1/B2/C0/C1/C2）
+        - A系列: robot_init_y=[-0.179, -0.182, -0.203], robot_init_x=[0.644, 0.765, 0.889]
+        - B系列: robot_init_y=[0.009, 0.009, 0.035], robot_init_x=[0.652, 0.752, 0.851]  
+        - C系列: robot_init_y=[0.224, 0.222, 0.222], robot_init_x=[0.665, 0.765, 0.865]
+    - rgb_overlay_path: ./ManiSkill2_real2sim/data/real_inpainting/open_drawer_{a0,a1,a2,b0,b1,b2,c0,c1,c2}.png
+
+
+
+**grasp_single**
+- GraspSingleInSceneEnv (CustomSceneEnv)
+    - options
+        - require_lifting_obj_for_success: bool = True
+        - success_from_episode_stats: bool = True
+        - distractor_model_ids: Optional[List[str]] = None
+        - slightly_darker_lighting: bool = False
+        - slightly_brighter_lighting: bool = False
+        - darker_lighting: bool = False
+        - prepackaged_config: bool = False
+    - GraspSingleCustomInSceneEnv (GraspSingleInSceneEnv, CustomOtherObjectsInSceneEnv)
+        - GraspSingleCustomOrientationInSceneEnv (GraspSingleCustomInSceneEnv)
+            - options
+                - upright: bool = False （オブジェクトを直立させる）
+                - laid_vertically: bool = False （オブジェクトを縦方向に寝かせる）
+                - lr_switch: bool = False （オブジェクトを左右反転させる）
+            - GraspSingleRandomObjectInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）
+                    - opened_pepsi_can, opened_coke_can, opened_sprite_can, opened_fanta_can
+                    - opened_redbull_can, blue_plastic_bottle, apple, orange, sponge
+                    - bridge_spoon_generated_modified, bridge_carrot_generated_modified
+                    - green_cube_3cm, yellow_cube_3cm, eggplant
+            - GraspSingleCokeCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: coke_can
+            - GraspSingleOpenedCokeCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: opened_coke_can
+                - GraspSingleAltDensityOpenedCokeCanInScene-v0 (GraspSingleOpenedCokeCanInSceneEnv)
+                    - density=100 （元の密度50から変更、空の開封済み缶の質量20gに対応）
+                - GraspSingleDummy-v0 (GraspSingleOpenedCokeCanInSceneEnv)
+                    - robot_init_options （固定）
+                        - init_xy: [100.0, 100.0] （ロボットを遠い位置に配置）
+                        - init_height: 50.0
+                - GraspSingleOpenedCokeCanAltGoogleCameraInScene-v0 (GraspSingleOpenedCokeCanInSceneEnv)
+                    - robot_init_options （固定）
+                        - qpos: [..., -0.00285961, 0.9351361] （カメラ向き変更）
+                - GraspSingleOpenedCokeCanAltGoogleCamera2InScene-v0 (GraspSingleOpenedCokeCanInSceneEnv)
+                    - robot_init_options （固定）
+                        - qpos: [..., -0.00285961, 0.6651361] （別のカメラ向き）
+                - GraspSingleOpenedCokeCanDistractorInScene-v0 (GraspSingleOpenedCokeCanInSceneEnv)
+                    - options
+                        - distractor_config: "less" or "more" （妨害オブジェクトの量）
+            - GraspSinglePepsiCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: pepsi_can
+            - GraspSingleOpenedPepsiCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: opened_pepsi_can
+            - GraspSingle7upCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: 7up_can
+            - GraspSingleOpened7upCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: opened_7up_can
+            - GraspSingleSpriteCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: sprite_can
+            - GraspSingleOpenedSpriteCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: opened_sprite_can
+            - GraspSingleFantaCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: fanta_can
+            - GraspSingleOpenedFantaCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: opened_fanta_can
+            - GraspSingleRedBullCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: redbull_can
+            - GraspSingleOpenedRedBullCanInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: opened_redbull_can
+            - GraspSingleBluePlasticBottleInScene-v0 (GraspSingleCustomOrientationInSceneEnv)
+                - model_ids （固定）: blue_plastic_bottle
+        - GraspSingleAppleInScene-v0 (GraspSingleCustomInSceneEnv)
+            - model_ids （固定）: apple
+        - GraspSingleOrangeInScene-v0 (GraspSingleCustomInSceneEnv)
+            - model_ids （固定）: orange
+        - GraspSingleSpongeInScene-v0 (GraspSingleCustomInSceneEnv)
+            - model_ids （固定）: sponge
+        - GraspSingleBridgeSpoonInScene-v0 (GraspSingleCustomInSceneEnv)
+            - model_ids （固定）: bridge_spoon_generated_modified
+
+**move_near**
+- MoveNearInSceneEnv (CustomSceneEnv)
+    - options
+        - original_lighting: bool = False
+        - slightly_darker_lighting: bool = False
+        - slightly_brighter_lighting: bool = False
+        - ambient_only_lighting: bool = False
+        - prepackaged_config: bool = False
+    - MoveNearGoogleInScene-v0 (MoveNearInSceneEnv, CustomOtherObjectsInSceneEnv)
+        - options
+            - no_distractor: bool = False （妨害オブジェクトなしモード）
+        - MoveNearGoogleBakedTexInScene-v0 (MoveNearGoogleInSceneEnv)
+            - DEFAULT_MODEL_JSON: "info_pick_custom_baked_tex_v0.json"
+        - MoveNearGoogleBakedTexInSceneEnvV1 (MoveNearGoogleInSceneEnv)
+            - DEFAULT_MODEL_JSON: "info_pick_custom_baked_tex_v1.json"
+            - options
+                - light_mode: "simple", "simple2" or None
+        - MoveNearAltGoogleCameraInScene-v0 (MoveNearGoogleInSceneEnv)
+            - robot_init_options （固定）
+                - qpos: [..., -0.00285961, 0.9351361] （カメラ向き変更）
+        - MoveNearAltGoogleCamera2InScene-v0 (MoveNearGoogleInSceneEnv)
+            - robot_init_options （固定）
+                - qpos: [..., -0.00285961, 0.6651361] （別のカメラ向き）
+
+**open_drawer**
+- OpenDrawerInSceneEnv (CustomSceneEnv)
+    - options
+        - light_mode: Optional[str] = None
+        - camera_mode: Optional[str] = None
+        - station_name: str = "mk_station" （キャビネットの種類）
+        - cabinet_joint_friction: float = 0.05
+        - prepackaged_config: bool = False
+    - OpenDrawerCustomInScene-v0 (OpenDrawerInSceneEnv, CustomOtherObjectsInSceneEnv)
+        - drawer_ids: ["top", "middle", "bottom"]
+        - OpenTopDrawerCustomInScene-v0 (OpenDrawerCustomInSceneEnv)
+            - drawer_ids: ["top"]
+        - OpenMiddleDrawerCustomInScene-v0 (OpenDrawerCustomInSceneEnv)
+            - drawer_ids: ["middle"]
+        - OpenBottomDrawerCustomInScene-v0 (OpenDrawerCustomInSceneEnv)
+            - drawer_ids: ["bottom"]
+
+**close_drawer**
+- CloseDrawerInSceneEnv (OpenDrawerInSceneEnv)
+    - 引き出しを閉じるタスク（初期状態で引き出しが開いている）
+    - CloseDrawerCustomInScene-v0 (CloseDrawerInSceneEnv, CustomOtherObjectsInSceneEnv)
+        - drawer_ids: ["top", "middle", "bottom"]
+        - CloseTopDrawerCustomInScene-v0 (CloseDrawerCustomInSceneEnv)
+            - drawer_ids: ["top"]
+        - CloseMiddleDrawerCustomInScene-v0 (CloseDrawerCustomInSceneEnv)
+            - drawer_ids: ["middle"]
+        - CloseBottomDrawerCustomInScene-v0 (CloseDrawerCustomInSceneEnv)
+            - drawer_ids: ["bottom"]
+
+**place_object_in_closed_drawer**
+- PlaceObjectInClosedDrawerInSceneEnv (OpenDrawerInSceneEnv)
+    - options
+        - force_advance_subtask_time_steps: int = 100 （強制的に次のサブタスクに進むまでのステップ数）
+    - PlaceIntoClosedDrawerCustomInScene-v0 (PlaceObjectInClosedDrawerInSceneEnv, CustomOtherObjectsInSceneEnv)
+        - DEFAULT_MODEL_JSON: "info_pick_custom_baked_tex_v1.json"
+        - drawer_ids: ["top", "middle", "bottom"]
+        - PlaceIntoClosedTopDrawerCustomInScene-v0 (PlaceIntoClosedDrawerCustomInSceneEnv)
+            - drawer_ids: ["top"]
+        - PlaceIntoClosedMiddleDrawerCustomInScene-v0 (PlaceIntoClosedDrawerCustomInSceneEnv)
+            - drawer_ids: ["middle"]
+        - PlaceIntoClosedBottomDrawerCustomInScene-v0 (PlaceIntoClosedDrawerCustomInSceneEnv)
+            - drawer_ids: ["bottom"]
+        - PlaceIntoClosedTopDrawerCustomInScene-v1 (PlaceIntoClosedDrawerCustomInSceneEnv)
+            - drawer_ids: ["top"]
+            - 引き出しが自動的に開かれたら次のサブタスクに進む
+
+**put_on**
+- PutOnInSceneEnv (MoveNearInSceneEnv)
+    - オブジェクトを別のオブジェクトの上に置くタスク
+    - PutOnBridgeInSceneEnv (PutOnInSceneEnv, CustomBridgeObjectsInSceneEnv)
+        - options
+            - source_obj_name: str = None （移動するオブジェクト）
+            - target_obj_name: str = None （目標オブジェクト）
+            - xy_configs: List[np.ndarray] = None （位置設定）
+            - quat_configs: List[np.ndarray] = None （回転設定）
+        - PutSpoonOnTableClothInScene-v0 (PutOnBridgeInSceneEnv)
+            - source_obj_name （固定）: "bridge_spoon_generated_modified"
+            - target_obj_name （固定）: "table_cloth_generated_shorter"
+            - 部分的にテーブルクロスの上にあれば成功とみなす
+        - PutCarrotOnPlateInScene-v0 (PutOnBridgeInSceneEnv)
+            - source_obj_name （固定）: "bridge_carrot_generated_modified"
+            - target_obj_name （固定）: "bridge_plate_objaverse_larger"
+        - StackGreenCubeOnYellowCubeInScene-v0 (PutOnBridgeInSceneEnv)
+            - source_obj_name （固定）: "green_cube_3cm"
+            - target_obj_name （固定）: "yellow_cube_3cm"
+            - StackGreenCubeOnYellowCubeBakedTexInScene-v0 (StackGreenCubeOnYellowCubeInScene)
+                - DEFAULT_MODEL_JSON: "info_bridge_custom_baked_tex_v0.json"
+                - source_obj_name （固定）: "baked_green_cube_3cm"
+                - target_obj_name （固定）: "baked_yellow_cube_3cm"
+        - PutEggplantInBasketScene-v0 (PutOnBridgeInSceneEnv)
+            - source_obj_name （固定）: "eggplant"
+            - target_obj_name （固定）: "dummy_sink_target_plane" （見えないターゲット平面）
+            - robot （固定）: "widowx_sink_camera_setup"
+            - scene_name （固定）: "bridge_table_1_v2"
+            - rgb_always_overlay_objects: ['sink', 'dummy_sink_target_plane']
+
+**base_env**
+- CustomSceneEnv (BaseEnv)
+    - options
+        - robot: str = "google_robot_static"
+        - rgb_overlay_path: Optional[str] = None
+        - rgb_overlay_cameras: list = []
+        - rgb_overlay_mode: str = 'background'
+        - rgb_always_overlay_objects: List[str] = []
+        - disable_bad_material: bool = False
+        - asset_root: Optional[str] = None
+        - scene_root: Optional[str] = None
+        - scene_name: Optional[str] = None
+        - scene_offset: Optional[List[float]] = None
+        - scene_pose: Optional[List[float]] = None
+        - scene_table_height: float = 0.87
+        - model_json: Optional[str] = None
+        - model_ids: List[str] = ()
+        - model_db_override: Dict[str, Dict] = {}
+        - urdf_version: str = ""
+    - CustomOtherObjectsInSceneEnv (CustomSceneEnv)
+        - DEFAULT_ASSET_ROOT: "{ASSET_DIR}/custom"
+        - DEFAULT_SCENE_ROOT: "{ASSET_DIR}/hab2_bench_assets"
+        - DEFAULT_MODEL_JSON: "info_pick_custom_v0.json"
+        - obj_static_friction: 0.5
+        - obj_dynamic_friction: 0.5
+        - CustomBridgeObjectsInSceneEnv (CustomOtherObjectsInSceneEnv)
+            - DEFAULT_MODEL_JSON: "info_bridge_custom_v0.json"

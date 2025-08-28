@@ -81,7 +81,9 @@ def run_maniskill2_eval_single_episode(
         env_reset_options["obj_init_options"] = {
             "episode_id": obj_episode_id,
         }
-    obs, _ = env.reset(options=env_reset_options)
+    episode_seed = np.random.randint(0, 100000)
+
+    obs, _ = env.reset(options=env_reset_options, seed=episode_seed)
     # for long-horizon environments, we check if the current subtask is the final subtask
     is_final_subtask = env.is_final_subtask()
 
