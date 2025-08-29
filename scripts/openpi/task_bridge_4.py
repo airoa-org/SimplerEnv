@@ -7,6 +7,7 @@ from simpler_env.policies.openpi.pi0_or_fast import OpenPiFastInference
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
     parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
+    parser.add_argument("--control-freq", type=int, default=5, help="Set control frequency (default->5)")
     return parser.parse_args()
 
 
@@ -18,7 +19,9 @@ if __name__ == "__main__":
 
     print("Policy initialized. Starting evaluation...")
 
-    final_scores = widowx_task4_put_object_in_basket(env_policy=policy, ckpt_path=args.ckpt_path)
+    final_scores = widowx_task4_put_object_in_basket(
+        env_policy=policy, ckpt_path=args.ckpt_path, control_freq=args.control_freq
+    )
 
     print("\nEvaluation finished.")
     print(f"Final calculated scores: {final_scores}")

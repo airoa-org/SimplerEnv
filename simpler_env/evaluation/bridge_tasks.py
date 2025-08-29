@@ -7,13 +7,18 @@ from .evaluate import _run_single_evaluation
 from . import random_envs
 
 
-def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[List[bool]]:
+def widowx_task1_pick_object(
+        env_policy: AiroaBasePolicy,
+        ckpt_path: str,
+        control_freq: int = 5
+    ) -> List[List[bool]]:
+
     results: List[List[bool]] = []
 
     cfg = ManiSkill2Config(
         policy_setup="widowx_bridge",
         robot="widowx",
-        control_freq=5,
+        control_freq=control_freq,
         sim_freq=500,
         max_episode_steps=60,
         env_name="GraspRandomObjectInScene-v0",
@@ -32,13 +37,18 @@ def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str) -> Lis
     return results
 
 
-def widowx_task2_stack_cube(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[List[bool]]:
+def widowx_task2_stack_cube(
+        env_policy: AiroaBasePolicy,
+        ckpt_path: str,
+        control_freq: int = 5
+    ) -> List[List[bool]]:
+
     results: List[List[bool]] = []
 
     cfg = ManiSkill2Config(
         policy_setup="widowx_bridge",
         robot="widowx",
-        control_freq=5,
+        control_freq=control_freq,
         sim_freq=500,
         max_episode_steps=60,
         env_name="StackRandomGreenYellowCubeInScene-v0",
@@ -57,13 +67,18 @@ def widowx_task2_stack_cube(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
     return results
 
 
-def widowx_task3_put_object_on_top(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[List[bool]]:
+def widowx_task3_put_object_on_top(
+        env_policy: AiroaBasePolicy,
+        ckpt_path: str,
+        control_freq: int = 5
+    ) -> List[List[bool]]:
+
     results: List[List[bool]] = []
 
     cfg = ManiSkill2Config(
         policy_setup="widowx_bridge",
         robot="widowx",
-        control_freq=5,
+        control_freq=control_freq,
         sim_freq=500,
         max_episode_steps=60,
         env_name="PutRandomObjectOnRandomTopInScene-v0",
@@ -82,13 +97,18 @@ def widowx_task3_put_object_on_top(env_policy: AiroaBasePolicy, ckpt_path: str) 
     return results
 
 
-def widowx_task4_put_object_in_basket(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[List[bool]]:
+def widowx_task4_put_object_in_basket(
+        env_policy: AiroaBasePolicy,
+        ckpt_path: str,
+        control_freq: int = 5
+    ) -> List[List[bool]]:
+
     results: List[List[bool]] = []
 
     cfg = ManiSkill2Config(
         policy_setup="widowx_bridge",
         robot="widowx_sink_camera_setup",
-        control_freq=5,
+        control_freq=control_freq,
         sim_freq=500,
         max_episode_steps=120,
         env_name="PutRandomObjectInBasketScene-v0",
