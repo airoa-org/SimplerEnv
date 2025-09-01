@@ -174,6 +174,12 @@ def run_maniskill2_eval_single_episode(
     os.makedirs(action_root, exist_ok=True)
     action_path = action_root + os.path.basename(action_path)
     model.visualize_epoch(predicted_actions, images, save_path=action_path)
+
+    # save summary
+    summary_file = os.path.dirname(video_path) + "/summary.txt"
+    with open(summary_file, 'a', encoding='utf-8') as file:
+        file.write(task_description + "," + success + '\n')
+
     return success == "success"
 
 
