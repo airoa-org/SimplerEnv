@@ -34,7 +34,7 @@ class ManiSkill2Config:
     rgb_overlay_path: Optional[str] = None
 
     # Robot initialization ranges
-    robot_init_x_range: List[float] = field(default_factory=lambda: [0.35, 0.35, 1])
+    robot_init_x_range: List[float] = field(default_factory=lambda: [0.35, 0.35, 1])  # start, end, len
     robot_init_y_range: List[float] = field(default_factory=lambda: [0.20, 0.20, 1])
     robot_init_rot_quat_center: List[float] = field(default_factory=lambda: [1, 0, 0, 0])
     robot_init_rot_rpy_range: List[float] = field(default_factory=lambda: [0, 0, 1, 0, 0, 1, 0, 0, 1])
