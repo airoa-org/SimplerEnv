@@ -172,31 +172,91 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
     return results
 
 
-# scenes = ["google_pick_coke_can_1_v4",
-#           "google_pick_coke_can_1_v4_alt_background",
-#           "google_pick_coke_can_1_v4_alt_background_2",
-#           "Baked_sc1_staging_objaverse_cabinet1_h870",
-#           "Baked_sc1_staging_objaverse_cabinet2_h870"]
-# object_orientation = [
-#     {"lr_switch": True},
-#     {"upright": True},
-#     {"laid_vertically": True},
-# ]
-# envs = ["GraspSingleRandomObjectInScene-v0", "GraspSingleRandomObjectAltGoogleCameraInScene-v0", "GraspSingleRandomObjectAltGoogleCamera2InScene-v0"]
-# lightings = [None, "darker", "brighter"]
+# def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+#     print("\n--- pick_object_variant_agg (single-pool, one-pick-per-trial) ---")
 
-# trail_num = 30
-# for t in range(trial_num):
-#     random_kwargs() = np.random(scenes, object_orientation, envs, lightings)
-#     cfg = ManiSkill2Config(**base_kwargs, **random_kwargs)
+#     results: List[List[bool]] = []
+
+#     scenes = [
+#         "google_pick_coke_can_1_v4",
+#         "google_pick_coke_can_1_v4_alt_background",
+#         "google_pick_coke_can_1_v4_alt_background_2",
+#         "Baked_sc1_staging_objaverse_cabinet1_h870",
+#         "Baked_sc1_staging_objaverse_cabinet2_h870",
+#     ]
+#     envs = [
+#         "GraspSingleRandomObjectInScene-v0",
+#         "GraspSingleRandomObjectAltGoogleCameraInScene-v0",
+#         "GraspSingleRandomObjectAltGoogleCamera2InScene-v0",
+#     ]
+#     object_orientation = [
+#         {"lr_switch": True},
+#         {"upright": True},
+#         {"laid_vertically": True},
+#     ]
+#     lightings = [None, "darker", "brighter"]
+
+#     base_kwargs: Dict[str, Any] = dict(
+#         robot="google_robot_static",
+#         policy_setup="google_robot",
+#         control_freq=3,
+#         sim_freq=513,
+#         max_episode_steps=160,
+#         ckpt_path=ckpt_path,
+#         robot_init_x_range=[0.35, 0.35, 1],
+#         robot_init_y_range=[0.20, 0.20, 1],
+#         obj_init_x_range=[-0.35, -0.12, 5],
+#         obj_init_y_range=[-0.02, 0.42, 5],
+#         obj_variation_mode="episode_xy",
+#         obj_episode_range=[0, 4],
+#         robot_init_rot_quat_center=[0, 0, 0, 1],
+#         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+#     )
+
+#     # 単一プール（どれが選ばれたか識別できるよう (kind, value) で保持）
+#     pool = (
+#         [("scene", s) for s in scenes]
+#         + [("env", e) for e in envs]
+#         + [("orientation", o) for o in object_orientation]
+#         + [("lighting", l) for l in lightings]
+#     )
+
+#     # 現在の設定（初期値）
+#     current = {
+#         "scene": scenes[0],
+#         "env": envs[0],
+#         "orientation": object_orientation[0],
+#         "lighting": None,
+#     }
+
+#     for _ in range(num_trials):
+#         kind, value = random.choice(pool)  # ← 毎回1つだけ選ぶ
+#         current[kind] = value  # 選ばれた種類だけ更新
+
+#         # additional_env_build_kwargs を構築
+#         add_kwargs = dict(current["orientation"])
+#         if current["lighting"] == "darker":
+#             add_kwargs["slightly_darker_lighting"] = True
+#         elif current["lighting"] == "brighter":
+#             add_kwargs["slightly_brighter_lighting"] = True
+
+#         cfg = ManiSkill2Config(
+#             **base_kwargs,
+#             env_name=current["env"],
+#             scene_name=current["scene"],
+#             additional_env_build_kwargs=add_kwargs,
+#         )
+#         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+
+#     return results
 
 
-def pick_object_variant_agg(
-    env_policy: "AiroaBasePolicy",
-    ckpt_path: str,
-    num_trials: int = 30,
-) -> List[List[bool]]:
-    print("\n--- pick_object_variant_agg (single-pool, one-pick-per-trial) ---")
+def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+    """
+    ランダムにシーン/姿勢/環境/照明を選んで評価を繰り返す。
+    戻り値は各トライアルの _run_single_evaluation の結果のリスト。
+    """
+    print("\n--- pick_object_variant_agg (randomized) ---")
 
     results: List[List[bool]] = []
 
@@ -207,16 +267,19 @@ def pick_object_variant_agg(
         "Baked_sc1_staging_objaverse_cabinet1_h870",
         "Baked_sc1_staging_objaverse_cabinet2_h870",
     ]
-    envs = [
-        "GraspSingleRandomObjectInScene-v0",
-        "GraspSingleRandomObjectAltGoogleCameraInScene-v0",
-        "GraspSingleRandomObjectAltGoogleCamera2InScene-v0",
-    ]
+
     object_orientation = [
         {"lr_switch": True},
         {"upright": True},
         {"laid_vertically": True},
     ]
+
+    envs = [
+        "GraspSingleRandomObjectInScene-v0",
+        "GraspSingleRandomObjectAltGoogleCameraInScene-v0",
+        "GraspSingleRandomObjectAltGoogleCamera2InScene-v0",
+    ]
+
     lightings = [None, "darker", "brighter"]
 
     base_kwargs: Dict[str, Any] = dict(
@@ -231,44 +294,30 @@ def pick_object_variant_agg(
         obj_init_x_range=[-0.35, -0.12, 5],
         obj_init_y_range=[-0.02, 0.42, 5],
         obj_variation_mode="episode_xy",
-        obj_episode_range=[0, 4],
+        obj_episode_range=[0, 1],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
     )
 
-    # 単一プール（どれが選ばれたか識別できるよう (kind, value) で保持）
-    pool = (
-        [("scene", s) for s in scenes]
-        + [("env", e) for e in envs]
-        + [("orientation", o) for o in object_orientation]
-        + [("lighting", l) for l in lightings]
-    )
-
-    # 現在の設定（初期値）
-    current = {
-        "scene": scenes[0],
-        "env": envs[0],
-        "orientation": object_orientation[0],
-        "lighting": None,  # デフォ照明
-    }
-
     for _ in range(num_trials):
-        kind, value = random.choice(pool)  # ← 毎回1つだけ選ぶ
-        current[kind] = value  # 選ばれた種類だけ更新
+        scene_name = random.choice(scenes)
+        env_name = random.choice(envs)
+        orientation = random.choice(object_orientation)
+        lighting = random.choice(lightings)
 
-        # additional_env_build_kwargs を構築
-        add_kwargs = dict(current["orientation"])
-        if current["lighting"] == "darker":
+        add_kwargs = dict(orientation)
+        if lighting == "darker":
             add_kwargs["slightly_darker_lighting"] = True
-        elif current["lighting"] == "brighter":
+        elif lighting == "brighter":
             add_kwargs["slightly_brighter_lighting"] = True
 
         cfg = ManiSkill2Config(
             **base_kwargs,
-            env_name=current["env"],
-            scene_name=current["scene"],
+            env_name=env_name,
+            scene_name=scene_name,
             additional_env_build_kwargs=add_kwargs,
         )
+
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     return results
@@ -803,7 +852,7 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
 
-    vm_results += pick_object_visual_matching(env_policy, ckpt_path)
+    # vm_results += pick_object_visual_matching(env_policy, ckpt_path)
     sim_results += pick_object_variant_agg(env_policy, ckpt_path)
 
     vm_results += pick_object_among_visual_matching(env_policy, ckpt_path)
