@@ -388,23 +388,24 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: 
     )
 
     background_scenes = ["frl_apartment_stage_simple", "modern_bedroom_no_roof", "modern_office_no_roof"]
-    stations = [None, "mk_station2", "mk_station3"]
+    stations = ["mk_station", "mk_station2", "mk_station3"]
     lightings = [None, "brighter", "darker"]
 
     for _ in range(num_trials):
         env_name = random.choice(env_names)
         scene = random.choice(background_scenes)
         station = random.choice(stations)
-        enable_raytracing = random.choice([True, False])
+        # enable_raytracing = random.choice([True, False])
         light = random.choice(lightings)
 
         additional_env_build_kwargs = {
-            "shader_dir": "rt",
+            # "shader_dir": "rt", # v100とかはray tracingに対応していない
             "light_mode": light,
             "station_name": station,
         }
+
         cfg = ManiSkill2Config(
-            **base, env_name=env_name, scene_name=scene, additional_env_build_kwargs=additional_env_build_kwargs, enable_raytracing=enable_raytracing
+            **base, env_name=env_name, scene_name=scene, additional_env_build_kwargs=additional_env_build_kwargs, enable_raytracing=False
         )
 
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
@@ -461,7 +462,7 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trial
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.21, 0.21, 1],
         obj_variation_mode="episode",
-        obj_episode_range=[0, 30],
+        obj_episode_range=[0, 1],  # TODO: widowxとおなじようランダマイズする
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
@@ -535,17 +536,36 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, n
         ),
     ]
 
-    add_base = dict(station_name="mk_station_recolor", light_mode="simple", disable_bad_material=True, model_ids="baked_apple_v2")
+    model_ids = [
+        "baked_opened_pepsi_can_v2",
+        "baked_opened_coke_can_v2",
+        "baked_opened_7up_can_v2",
+        "baked_opened_redbull_can_v2",
+        "baked_blue_plastic_bottle_v2",
+        "baked_apple_v2",
+        "baked_orange_v2",
+        "baked_sponge_v2",
+    ]
 
     for _ in range(num_trials):
         env_name = random.choice(env_names)
         urdf = random.choice(urdf_versions)
         pose = random.choice(overlay_poses)
+        model_id = random.choice(model_ids)
+
+        additional_env_build_kwargs = {
+            "station_name": "mk_station_recolor",
+            "light_mode": "simple",
+            "disable_bad_material": True,
+            "model_ids": model_id,
+            "urdf_version": urdf,
+        }
+
         cfg = ManiSkill2Config(
             **base,
             env_name=env_name,
             scene_name="dummy_drawer",
-            additional_env_build_kwargs={**add_base, "urdf_version": urdf},
+            additional_env_build_kwargs=additional_env_build_kwargs,
             **pose,
         )
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
@@ -564,7 +584,6 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
         sim_freq=513,
         max_episode_steps=400,
         ckpt_path=ckpt_path,
-        additional_env_build_kwargs={"model_ids": "apple"},
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[-0.08, -0.02, 3],
         obj_init_y_range=[-0.02, 0.08, 3],
@@ -579,17 +598,41 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
 
     env_names = ["PlaceIntoClosedTopDrawerCustomInScene-v0"]
     background_scenes = ["modern_bedroom_no_roof", "modern_office_no_roof"]
-    stations = [None, "mk_station2", "mk_station3"]
+    stations = ["mk_station", "mk_station2", "mk_station3"]
     lightings = [None, "brighter", "darker"]
+    model_ids = [
+        "pepsi_can",
+        "baked_opened_pepsi_can_v2",
+        "coke_can",
+        "opened_coke_can",
+        "baked_opened_coke_can_v2",
+        "sprite_can",
+        "opened_sprite_can",
+        "baked_opened_7up_can_v2",
+        "fanta_can",
+        "opened_fanta_can",
+        "redbull_can",
+        "baked_opened_redbull_can_v2",
+        "blue_plastic_bottle",
+        "baked_blue_plastic_bottle_v2",
+        "apple",
+        "baked_apple_v2",
+        "orange",
+        "baked_orange_v2",
+        "sponge",
+        "baked_sponge_v2",
+    ]
 
     for _ in range(num_trials):
         env_name = random.choice(env_names)
         scene = random.choice(background_scenes)
         station = random.choice(stations)
         light = random.choice(lightings)
+        model_id = random.choice(model_ids)
 
         additional_env_build_kwargs = {
-            "shader_dir": "rt",
+            "model_ids": model_id,
+            # "shader_dir": "rt",
             "light_mode": light,
             "station_name": station,
         }
@@ -616,21 +659,22 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
 
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
+    num_trials = 30
 
-    # vm_results += pick_object_visual_matching(env_policy, ckpt_path)
-    sim_results += pick_object_variant_agg(env_policy, ckpt_path)
+    vm_results += pick_object_visual_matching(env_policy, ckpt_path, num_trials)
+    sim_results += pick_object_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += pick_object_among_visual_matching(env_policy, ckpt_path)
-    sim_results += pick_object_among_variant_agg(env_policy, ckpt_path)
+    vm_results += pick_object_among_visual_matching(env_policy, ckpt_path, num_trials)
+    sim_results += pick_object_among_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += drawer_visual_matching(env_policy, ckpt_path)
-    sim_results += drawer_variant_agg(env_policy, ckpt_path)
+    vm_results += drawer_visual_matching(env_policy, ckpt_path, num_trials)
+    sim_results += drawer_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += move_near_visual_matching(env_policy, ckpt_path)
-    sim_results += move_near_variant_agg(env_policy, ckpt_path)
+    vm_results += move_near_visual_matching(env_policy, ckpt_path, num_trials)
+    sim_results += move_near_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path)
-    sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path)
+    vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path, num_trials)
+    sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path, num_trials)
 
     # ロバストスコア
     sim_score = calculate_robust_score(sim_results)
