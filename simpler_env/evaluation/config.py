@@ -34,6 +34,8 @@ class ManiSkill2Config:
     rgb_overlay_path: Optional[str] = None
 
     # Robot initialization ranges
+    robot_variation_mode: str = "xy"  # choices: ["xy", "episode_xy"]
+    robot_episode_range: List[int] = field(default_factory=lambda: [0, 60])
     robot_init_x_range: List[float] = field(default_factory=lambda: [0.35, 0.35, 1])  # start, end, len
     robot_init_y_range: List[float] = field(default_factory=lambda: [0.20, 0.20, 1])
     robot_init_rot_quat_center: List[float] = field(default_factory=lambda: [1, 0, 0, 0])
@@ -62,8 +64,9 @@ class ManiSkill2Config:
     def __post_init__(self):
         """argparseの後処理と同等の計算を実行"""
         # Robot pose calculations
-        self.robot_init_xs = parse_range_tuple(self.robot_init_x_range)
-        self.robot_init_ys = parse_range_tuple(self.robot_init_y_range)
+        if self.robot_variation_mode == "xy":
+            self.robot_init_xs = parse_range_tuple(self.robot_init_x_range)
+            self.robot_init_ys = parse_range_tuple(self.robot_init_y_range)
 
         # Robot orientation calculations
         self.robot_init_quats = []
