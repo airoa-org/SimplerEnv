@@ -218,6 +218,11 @@ def maniskill2_evaluator(model, args):
                 elif args.obj_variation_mode == "episode":
                     for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
                         success_arr.append(run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs))
+                elif args.obj_variation_mode == "episode_xy":
+                    for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
+                        obj_init_x = np.random.uniform(args.obj_init_x_range[0], args.obj_init_x_range[1])
+                        obj_init_y = np.random.uniform(args.obj_init_y_range[0], args.obj_init_y_range[1])
+                        success_arr.append(run_maniskill2_eval_single_episode(obj_init_x=obj_init_x, obj_init_y=obj_init_y, **kwargs))
                 else:
                     raise NotImplementedError()
 

@@ -40,7 +40,7 @@ class ManiSkill2Config:
     robot_init_rot_rpy_range: List[float] = field(default_factory=lambda: [0, 0, 1, 0, 0, 1, 0, 0, 1])
 
     # Object variation settings
-    obj_variation_mode: str = "xy"  # choices: ["xy", "episode"]
+    obj_variation_mode: str = "xy"  # choices: ["xy", "episode", "episode_xy"]
     obj_episode_range: List[int] = field(default_factory=lambda: [0, 60])
     obj_init_x_range: List[float] = field(default_factory=lambda: [-0.35, -0.12, 5])
     obj_init_y_range: List[float] = field(default_factory=lambda: [-0.02, 0.42, 5])
@@ -86,5 +86,5 @@ class ManiSkill2Config:
                 self.additional_env_save_tags = self.additional_env_save_tags + f"_obs_camera_{self.obs_camera_name}"
 
         # Validate obj_variation_mode
-        if self.obj_variation_mode not in ["xy", "episode"]:
+        if self.obj_variation_mode not in ["xy", "episode", "episode_xy"]:
             raise ValueError(f"obj_variation_mode must be 'xy' or 'episode', got {self.obj_variation_mode}")
