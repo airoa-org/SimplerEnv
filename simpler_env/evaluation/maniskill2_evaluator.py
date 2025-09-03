@@ -192,45 +192,64 @@ def maniskill2_evaluator(model, args):
     success_arr = []
 
     # run inference
-    for robot_init_x in args.robot_init_xs:
-        for robot_init_y in args.robot_init_ys:
+    if args.robot_variation_mode == "xy":
+        for robot_init_x in args.robot_init_xs:
+            for robot_init_y in args.robot_init_ys:
+                for robot_init_quat in args.robot_init_quats:
+                    success = _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
+                    success_arr.append(success)
+
+    if args.robot_variation_mode == "episode_xy":
+        for robot_episode_id in range(args.robot_episode_range[0], args.robot_episode_range[1]):
+            robot_init_x = np.random.uniform(args.robot_init_x_range[0], args.robot_init_x_range[1])
+            robot_init_y = np.random.uniform(args.robot_init_y_range[0], args.robot_init_y_range[1])
             for robot_init_quat in args.robot_init_quats:
-                kwargs = dict(
-                    model=model,
-                    ckpt_path=args.ckpt_path,
-                    robot_name=args.robot,
-                    env_name=args.env_name,
-                    scene_name=args.scene_name,
-                    robot_init_x=robot_init_x,
-                    robot_init_y=robot_init_y,
-                    robot_init_quat=robot_init_quat,
-                    control_mode=control_mode,
-                    additional_env_build_kwargs=args.additional_env_build_kwargs,
-                    rgb_overlay_path=args.rgb_overlay_path,
-                    control_freq=args.control_freq,
-                    sim_freq=args.sim_freq,
-                    max_episode_steps=args.max_episode_steps,
-                    enable_raytracing=args.enable_raytracing,
-                    additional_env_save_tags=args.additional_env_save_tags,
-                    obs_camera_name=args.obs_camera_name,
-                    logging_dir=args.logging_dir,
-                )
-                if args.obj_variation_mode == "xy":
-                    for obj_init_x in args.obj_init_xs:
-                        for obj_init_y in args.obj_init_ys:
-                            success_arr.append(
-                                run_maniskill2_eval_single_episode(
-                                    obj_init_x=obj_init_x,
-                                    obj_init_y=obj_init_y,
-                                    **kwargs,
-                                )
-                            )
-                elif args.obj_variation_mode == "episode":
-                    import random
-                    sampled_ids = random.sample(range(1000), args.obj_episode_range[1])
-                    for idx, obj_episode_id in enumerate(sampled_ids):
-                        success_arr.append(run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, index=idx, **kwargs))
-                else:
-                    raise NotImplementedError()
+                success = _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
+                success_arr.append(success)
 
     return success_arr
+
+
+def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat):
+    kwargs = dict(
+        model=model,
+        ckpt_path=args.ckpt_path,
+        robot_name=args.robot,
+        env_name=args.env_name,
+        scene_name=args.scene_name,
+        robot_init_x=robot_init_x,
+        robot_init_y=robot_init_y,
+        robot_init_quat=robot_init_quat,
+        control_mode=control_mode,
+        additional_env_build_kwargs=args.additional_env_build_kwargs,
+        rgb_overlay_path=args.rgb_overlay_path,
+        control_freq=args.control_freq,
+        sim_freq=args.sim_freq,
+        max_episode_steps=args.max_episode_steps,
+        enable_raytracing=args.enable_raytracing,
+        additional_env_save_tags=args.additional_env_save_tags,
+        obs_camera_name=args.obs_camera_name,
+        logging_dir=args.logging_dir,
+    )
+    if args.obj_variation_mode == "xy":
+        for obj_init_x in args.obj_init_xs:
+            for obj_init_y in args.obj_init_ys:
+                success = run_maniskill2_eval_single_episode(
+                    obj_init_x=obj_init_x,
+                    obj_init_y=obj_init_y,
+                    **kwargs,
+                )
+    elif args.obj_variation_mode == "episode":
+        import random
+        sampled_ids = random.sample(range(1000), args.obj_episode_range[1])
+        for idx, obj_episode_id in enumerate(sampled_ids):
+            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs)
+    elif args.obj_variation_mode == "episode_xy":
+        for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
+            obj_init_x = np.random.uniform(args.obj_init_x_range[0], args.obj_init_x_range[1])
+            obj_init_y = np.random.uniform(args.obj_init_y_range[0], args.obj_init_y_range[1])
+            success = run_maniskill2_eval_single_episode(obj_init_x=obj_init_x, obj_init_y=obj_init_y, **kwargs)
+    else:
+        raise NotImplementedError()
+
+    return success

@@ -1,22 +1,39 @@
 ## Introduction
 
+### Google Robot
+**タスクセッティング**
+
+| Task                                | Challenge | Task Definition                                     | Randomizer Pool                                                                    |
+| ----------------------------------- | --------- | --------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `pick_object_visual_matching`       | 1         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<robot_color>`,`<camera_position>` |
+| `pick_object_variant_agg`           | 1         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<background/cabinet>`              |
+| `pick_object_among_visual_matching` | 2         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<robot_color>`,`<camera_position>` |
+| `pick_object_among_variant_agg`     | 2         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<background/cabinet>`              |
+| `drawer_visual_matching`            | 3         | open/close `<position>` drawer                      | `<position>`,`<robot_color>`,`<background-robot_init_pos>`                         |
+| `drawer_variant_agg`                | 3         | open/close `<position>` drawer                      | `<position>`,`<lighting>`,`<background>`,`<cabinet>`                               |
+| `move_near_visual_matching`         | 4         | move `<object>` near `<object>`                     | `<object>`,`<position>`,`<robot_position>`,`<robot_color>`                         |
+| `move_near_variant_agg`             | 4         | move `<object>` near `<object>`                     | `<object>`,`<position>`,`<lighting>`,`<background/cabinet>`,`<camera_position>`    |
+| `put_in_drawer_visual_matching`     | 5         | open top drawer -> place `<object>` into top drawer | `<object>`,`<robot_color>`,`<background-robot_init_pos>`                           |
+| `put_in_drawer_variant_agg`         | 5         | open top drawer -> place `<object>` into top drawer | `<object>`,`<lighting>`,`<robot_position>`,`<background>`,`<cabinet>`              |
+
+
 ### WidowX
 **タスクセッティング**
 
-|  Task  |  Challenge  | Task Definition               |
-|--------|-------------|--------------------------------|
-| 1      | 1           | Pick `<object>`               |
-| 2      | 2           | Stacking `<cube>` on `<cube>` |
-| 3      | 2           | Put `<object>` on `<top>`     |
-| 4      | 2           | Put `<object>` in basket      |
+| Task | Challenge | Task Definition               |
+| ---- | --------- | ----------------------------- |
+| 1    | 1         | Pick `<object>`               |
+| 2    | 2         | Stacking `<cube>` on `<cube>` |
+| 3    | 2         | Put `<object>` on `<top>`     |
+| 4    | 2         | Put `<object>` in basket      |
 
 **ランダマイザープール**
 
-| Pool Name | Element |
-|-----------|---------|
-|`<object>` |`green cube`, `yellow cube`, `eggplant`, `spoon`, `carrot`|
-|  `<top>`  |`plate`, `towel`|
-| `<cube>`  |`green cube`, `yellow cube`|
+| Pool Name  | Element                                                    |
+| ---------- | ---------------------------------------------------------- |
+| `<object>` | `green cube`, `yellow cube`, `eggplant`, `spoon`, `carrot` |
+| `<top>`    | `plate`, `towel`                                           |
+| `<cube>`   | `green cube`, `yellow cube`                                |
 
 
 ## 環境構築
