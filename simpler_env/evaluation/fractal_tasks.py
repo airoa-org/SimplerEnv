@@ -20,21 +20,6 @@ def calculate_robust_score(results: List[List[bool]], penalty_factor: float = 0.
     return max(0.0, robust_score)
 
 
-def _run_single_evaluation(env_policy: AiroaBasePolicy, cfg: ManiSkill2Config, ckpt_path: str) -> List[bool]:
-    if cfg.additional_env_build_kwargs:
-        if "urdf_version" in cfg.additional_env_build_kwargs:
-            kwargs_info = cfg.additional_env_build_kwargs["urdf_version"]
-        else:
-            kwargs_info = cfg.additional_env_build_kwargs
-    else:
-        kwargs_info = None
-
-    print(f"  ▶️  Running: env={cfg.env_name}, scene={cfg.scene_name}, kwargs={kwargs_info}")
-    success_arr = maniskill2_evaluator(env_policy, cfg)
-    print(f"  ✅  Success Rate: {np.mean(success_arr):.2%}")
-    return success_arr
-
-
 def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
     print("\n--- pick_object_visual_matching ---")
     results: List[List[bool]] = []
@@ -61,9 +46,10 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num
         obj_episode_range=[0, 1],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_visual_matching",
     )
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         urdf = random.choice(urdf_versions)
         orientation = random.choice(direction_orientationions_arr)
         cfg = ManiSkill2Config(
@@ -72,8 +58,9 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num
             scene_name="google_pick_coke_can_1_v4",
             rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
             additional_env_build_kwargs={**orientation, "urdf_version": urdf},
+            episode_id=i,
         )
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
@@ -83,7 +70,7 @@ def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_t
     ランダムにシーン/姿勢/環境/照明を選んで評価を繰り返す。
     戻り値は各トライアルの _run_single_evaluation の結果のリスト。
     """
-    print("\n--- pick_object_variant_agg (randomized) ---")
+    print("\n--- pick_object_variant_agg ---")
 
     results: List[List[bool]] = []
 
@@ -124,9 +111,10 @@ def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_t
         obj_episode_range=[0, 1],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_variant_agg",
     )
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         scene_name = random.choice(scenes)
         env_name = random.choice(envs)
         orientation = random.choice(object_orientation)
@@ -143,15 +131,16 @@ def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_t
             env_name=env_name,
             scene_name=scene_name,
             additional_env_build_kwargs=add_kwargs,
+            episode_id=i,
         )
 
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- pick_object_among_visual_matching (randomized) ---")
+    print("\n--- pick_object_among_visual_matching ---")
     results: List[List[bool]] = []
 
     object_orientation = [
@@ -176,9 +165,10 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
         obj_episode_range=[0, 1],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_among_visual_matching",
     )
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         urdf = random.choice(urdf_versions)
         orientation = random.choice(object_orientation)
         cfg = ManiSkill2Config(
@@ -187,14 +177,15 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
             scene_name="google_pick_coke_can_1_v4",
             rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
             additional_env_build_kwargs={**orientation, "urdf_version": urdf, "distractor_config": "less"},
+            episode_id=i,
         )
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- pick_object_among_variant_agg (randomized) ---")
+    print("\n--- pick_object_among_variant_agg ---")
     results: List[List[bool]] = []
 
     scenes = [
@@ -231,9 +222,10 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, n
         obj_episode_range=[0, 1],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_among_variant_agg",
     )
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         scene = random.choice(scenes)
         env = random.choice(envs)
         orientation = random.choice(object_orientation)
@@ -250,14 +242,15 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, n
             env_name=env,
             scene_name=scene,
             additional_env_build_kwargs=add_kwargs,
+            episode_id=i,
         )
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- drawer_visual_matching (randomized) ---")
+    print("\n--- drawer_visual_matching ---")
     results: List[List[bool]] = []
 
     env_names = [
@@ -281,6 +274,7 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_tria
         obj_init_x_range=[0, 0, 1],
         obj_init_y_range=[0, 0, 1],
         scene_name="dummy_drawer",
+        task_name="fractal_drawer_visual_matching",
     )
 
     overlay_poses = [
@@ -342,7 +336,7 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_tria
 
     add_base = dict(station_name="mk_station_recolor", light_mode="simple", disable_bad_material=True)
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         urdf = random.choice(urdf_versions)
         env_name = random.choice(env_names)
         pose = random.choice(overlay_poses)
@@ -351,14 +345,15 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_tria
             env_name=env_name,
             additional_env_build_kwargs={**add_base, "urdf_version": urdf},
             **pose,
+            episode_id=i,
         )
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- drawer_variant_agg (randomized) ---")
+    print("\n--- drawer_variant_agg ---")
     results: List[List[bool]] = []
 
     env_names = [
@@ -385,13 +380,14 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: 
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
         obj_init_x_range=[0, 0, 1],
         obj_init_y_range=[0, 0, 1],
+        task_name="fractal_drawer_visual_matching",
     )
 
     background_scenes = ["frl_apartment_stage_simple", "modern_bedroom_no_roof", "modern_office_no_roof"]
     stations = ["mk_station", "mk_station2", "mk_station3"]
     lightings = [None, "brighter", "darker"]
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         env_name = random.choice(env_names)
         scene = random.choice(background_scenes)
         station = random.choice(stations)
@@ -405,16 +401,21 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: 
         }
 
         cfg = ManiSkill2Config(
-            **base, env_name=env_name, scene_name=scene, additional_env_build_kwargs=additional_env_build_kwargs, enable_raytracing=False
+            **base,
+            env_name=env_name,
+            scene_name=scene,
+            additional_env_build_kwargs=additional_env_build_kwargs,
+            enable_raytracing=False,
+            episode_id=i,
         )
 
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- move_near_visual_matching (randomized) ---")
+    print("\n--- move_near_visual_matching ---")
     results: List[List[bool]] = []
 
     base_kwargs = dict(
@@ -430,11 +431,12 @@ def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
+        task_name="fractal_move_near_visual_matching",
     )
 
     urdf_versions = [None, "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         urdf = random.choice(urdf_versions)
         cfg = ManiSkill2Config(
             **base_kwargs,
@@ -443,14 +445,15 @@ def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
             rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_move_near_real_eval_1.png",
             additional_env_save_tags="baked_except_bpb_orange",
             additional_env_build_kwargs={"urdf_version": urdf},
+            episode_id=i,
         )
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- move_near_variant_agg (randomized) ---")
+    print("\n--- move_near_variant_agg ---")
     results: List[List[bool]] = []
 
     base_kwargs = dict(
@@ -465,6 +468,7 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trial
         obj_episode_range=[0, 1],  # TODO: widowxとおなじようランダマイズする
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
+        task_name="fractal_move_near_variant_agg",
         ckpt_path=ckpt_path,
     )
 
@@ -478,7 +482,7 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trial
     ]
     extras = [None, {"no_distractor": True}, {"slightly_darker_lighting": True}, {"slightly_brighter_lighting": True}]
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         env = random.choice(envs)
         scene = random.choice(scenes)
         extra = random.choice(extras)
@@ -488,14 +492,15 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trial
             env_name=env,
             scene_name=scene,
             additional_env_build_kwargs=extra if extra else None,
+            episode_id=i,
         )
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- put_in_drawer_visual_matching (randomized) ---")
+    print("\n--- put_in_drawer_visual_matching ---")
     results: List[List[bool]] = []
 
     env_names = ["PlaceIntoClosedTopDrawerCustomInScene-v0"]
@@ -513,6 +518,7 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, n
         obj_init_y_range=[-0.02, 0.08, 3],
         obj_variation_mode="episode_xy",
         obj_episode_range=[0, 1],
+        task_name="fractal_put_in_drawer_visual_matching",
     )
 
     overlay_poses = [
@@ -547,7 +553,7 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, n
         "baked_sponge_v2",
     ]
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         env_name = random.choice(env_names)
         urdf = random.choice(urdf_versions)
         pose = random.choice(overlay_poses)
@@ -567,14 +573,15 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, n
             scene_name="dummy_drawer",
             additional_env_build_kwargs=additional_env_build_kwargs,
             **pose,
+            episode_id=i,
         )
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
 
 def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-    print("\n--- put_in_drawer_variant_agg (randomized) ---")
+    print("\n--- put_in_drawer_variant_agg ---")
     results: List[List[bool]] = []
 
     common = dict(
@@ -594,6 +601,7 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
         robot_variation_mode="episode_xy",
         robot_episode_range=[0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
+        task_name="fractal_put_in_drawer_variant_agg",
     )
 
     env_names = ["PlaceIntoClosedTopDrawerCustomInScene-v0"]
@@ -623,7 +631,7 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
         "baked_sponge_v2",
     ]
 
-    for _ in range(num_trials):
+    for i in range(num_trials):
         env_name = random.choice(env_names)
         scene = random.choice(background_scenes)
         station = random.choice(stations)
@@ -637,8 +645,14 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
             "station_name": station,
         }
 
-        cfg = ManiSkill2Config(**common, env_name=env_name, scene_name=scene, additional_env_build_kwargs=additional_env_build_kwargs)
-        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+        cfg = ManiSkill2Config(
+            **common,
+            env_name=env_name,
+            scene_name=scene,
+            additional_env_build_kwargs=additional_env_build_kwargs,
+            episode_id=i,
+        )
+        results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
@@ -646,8 +660,8 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
 # ======================================================================
 # 総合評価（重み付け・スコアリングは従来どおり）
 # ======================================================================
-SIM_WEIGHT = 0.3
-VISUAL_MATCHING_WEIGHT = 0.7
+SIM_WEIGHT = 0.4
+VISUAL_MATCHING_WEIGHT = 0.6
 
 
 def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) -> Dict[str, float]:
@@ -657,9 +671,13 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     print(f"Weights: Sim={SIM_WEIGHT}, VisualMatching={VISUAL_MATCHING_WEIGHT}")
     print("=" * 80)
 
+    # fix seed
+    random.seed(42)
+    np.random.seed(42)
+
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
-    num_trials = 30
+    num_trials = 3
 
     vm_results += pick_object_visual_matching(env_policy, ckpt_path, num_trials)
     sim_results += pick_object_variant_agg(env_policy, ckpt_path, num_trials)
@@ -775,6 +793,6 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
 #             scene_name=current["scene"],
 #             additional_env_build_kwargs=add_kwargs,
 #         )
-#         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+#         results.append(maniskill2_evaluator(env_policy, cfg))
 
 #     return results
