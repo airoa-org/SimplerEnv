@@ -1,3 +1,4 @@
+import random
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -38,7 +39,7 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> 
     print("\n--- pick_object_visual_matching ---")
     results: List[List[bool]] = []
 
-    direction_options_arr = [
+    direction_orientationions_arr = [
         {"lr_switch": True},
         {"upright": True},
         {"laid_vertically": True},
@@ -51,24 +52,26 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> 
         policy_setup="google_robot",
         control_freq=3,
         sim_freq=513,
-        max_episode_steps=80,
+        max_episode_steps=160,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
         obj_init_x_range=[-0.35, -0.12, 8],
         obj_init_y_range=[-0.02, 0.42, 8],
+        obj_variation_mode="episode_xy",
+        obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
     )
 
     for urdf in urdf_versions:
-        for opt in direction_options_arr:
+        for orientation in direction_orientationions_arr:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name="GraspSingleRandomObjectInScene-v0",
                 scene_name="google_pick_coke_can_1_v4",
                 rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
-                additional_env_build_kwargs={**opt, "urdf_version": urdf},
+                additional_env_build_kwargs={**orientation, "urdf_version": urdf},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
@@ -79,7 +82,7 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
     print("\n--- pick_object_variant_agg ---")
     results: List[List[bool]] = []
 
-    coke_can_options_arr = [
+    object_orientation = [
         {"lr_switch": True},
         {"upright": True},
         {"laid_vertically": True},
@@ -90,57 +93,59 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
         policy_setup="google_robot",
         control_freq=3,
         sim_freq=513,
-        max_episode_steps=80,
+        max_episode_steps=160,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
         obj_init_x_range=[-0.35, -0.12, 5],
         obj_init_y_range=[-0.02, 0.42, 5],
+        obj_variation_mode="episode_xy",
+        obj_episode_range=[0, 4],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
     )
 
     # base
-    for opt in coke_can_options_arr:
+    for orientation in object_orientation:
         cfg = ManiSkill2Config(
             **base_kwargs,
             env_name="GraspSingleRandomObjectInScene-v0",
             scene_name="google_pick_coke_can_1_v4",
-            additional_env_build_kwargs={**opt},
+            additional_env_build_kwargs={**orientation},
         )
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # table textures (baked)
     baked_scenes = ["Baked_sc1_staging_objaverse_cabinet1_h870", "Baked_sc1_staging_objaverse_cabinet2_h870"]
     for scene in baked_scenes:
-        for opt in coke_can_options_arr:
+        for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name="GraspSingleRandomObjectInScene-v0",
                 scene_name=scene,
-                additional_env_build_kwargs={**opt},
+                additional_env_build_kwargs={**orientation},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # backgrounds
     bg_scenes = ["google_pick_coke_can_1_v4_alt_background", "google_pick_coke_can_1_v4_alt_background_2"]
     for scene in bg_scenes:
-        for opt in coke_can_options_arr:
+        for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name="GraspSingleRandomObjectInScene-v0",
                 scene_name=scene,
-                additional_env_build_kwargs={**opt},
+                additional_env_build_kwargs={**orientation},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # lightings (darker / brighter)
-    for opt in coke_can_options_arr:
+    for orientation in object_orientation:
         cfg = ManiSkill2Config(
             **base_kwargs,
             env_name="GraspSingleRandomObjectInScene-v0",
             scene_name="google_pick_coke_can_1_v4",
-            additional_env_build_kwargs={**opt, "slightly_darker_lighting": True},
+            additional_env_build_kwargs={**orientation, "slightly_darker_lighting": True},
         )
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
@@ -148,21 +153,123 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
             **base_kwargs,
             env_name="GraspSingleRandomObjectInScene-v0",
             scene_name="google_pick_coke_can_1_v4",
-            additional_env_build_kwargs={**opt, "slightly_brighter_lighting": True},
+            additional_env_build_kwargs={**orientation, "slightly_brighter_lighting": True},
         )
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # camera orientations
     alt_envs = ["GraspSingleRandomObjectAltGoogleCameraInScene-v0", "GraspSingleRandomObjectAltGoogleCamera2InScene-v0"]
     for env in alt_envs:
-        for opt in coke_can_options_arr:
+        for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name=env,
                 scene_name="google_pick_coke_can_1_v4",
-                additional_env_build_kwargs={**opt},
+                additional_env_build_kwargs={**orientation},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+
+    return results
+
+
+# scenes = ["google_pick_coke_can_1_v4",
+#           "google_pick_coke_can_1_v4_alt_background",
+#           "google_pick_coke_can_1_v4_alt_background_2",
+#           "Baked_sc1_staging_objaverse_cabinet1_h870",
+#           "Baked_sc1_staging_objaverse_cabinet2_h870"]
+# object_orientation = [
+#     {"lr_switch": True},
+#     {"upright": True},
+#     {"laid_vertically": True},
+# ]
+# envs = ["GraspSingleRandomObjectInScene-v0", "GraspSingleRandomObjectAltGoogleCameraInScene-v0", "GraspSingleRandomObjectAltGoogleCamera2InScene-v0"]
+# lightings = [None, "darker", "brighter"]
+
+# trail_num = 30
+# for t in range(trial_num):
+#     random_kwargs() = np.random(scenes, object_orientation, envs, lightings)
+#     cfg = ManiSkill2Config(**base_kwargs, **random_kwargs)
+
+
+def pick_object_variant_agg(
+    env_policy: "AiroaBasePolicy",
+    ckpt_path: str,
+    num_trials: int = 30,
+) -> List[List[bool]]:
+    print("\n--- pick_object_variant_agg (single-pool, one-pick-per-trial) ---")
+
+    results: List[List[bool]] = []
+
+    scenes = [
+        "google_pick_coke_can_1_v4",
+        "google_pick_coke_can_1_v4_alt_background",
+        "google_pick_coke_can_1_v4_alt_background_2",
+        "Baked_sc1_staging_objaverse_cabinet1_h870",
+        "Baked_sc1_staging_objaverse_cabinet2_h870",
+    ]
+    envs = [
+        "GraspSingleRandomObjectInScene-v0",
+        "GraspSingleRandomObjectAltGoogleCameraInScene-v0",
+        "GraspSingleRandomObjectAltGoogleCamera2InScene-v0",
+    ]
+    object_orientation = [
+        {"lr_switch": True},
+        {"upright": True},
+        {"laid_vertically": True},
+    ]
+    lightings = [None, "darker", "brighter"]
+
+    base_kwargs: Dict[str, Any] = dict(
+        robot="google_robot_static",
+        policy_setup="google_robot",
+        control_freq=3,
+        sim_freq=513,
+        max_episode_steps=160,
+        ckpt_path=ckpt_path,
+        robot_init_x_range=[0.35, 0.35, 1],
+        robot_init_y_range=[0.20, 0.20, 1],
+        obj_init_x_range=[-0.35, -0.12, 5],
+        obj_init_y_range=[-0.02, 0.42, 5],
+        obj_variation_mode="episode_xy",
+        obj_episode_range=[0, 4],
+        robot_init_rot_quat_center=[0, 0, 0, 1],
+        robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+    )
+
+    # 単一プール（どれが選ばれたか識別できるよう (kind, value) で保持）
+    pool = (
+        [("scene", s) for s in scenes]
+        + [("env", e) for e in envs]
+        + [("orientation", o) for o in object_orientation]
+        + [("lighting", l) for l in lightings]
+    )
+
+    # 現在の設定（初期値）
+    current = {
+        "scene": scenes[0],
+        "env": envs[0],
+        "orientation": object_orientation[0],
+        "lighting": None,  # デフォ照明
+    }
+
+    for _ in range(num_trials):
+        kind, value = random.choice(pool)  # ← 毎回1つだけ選ぶ
+        current[kind] = value  # 選ばれた種類だけ更新
+
+        # additional_env_build_kwargs を構築
+        add_kwargs = dict(current["orientation"])
+        if current["lighting"] == "darker":
+            add_kwargs["slightly_darker_lighting"] = True
+        elif current["lighting"] == "brighter":
+            add_kwargs["slightly_brighter_lighting"] = True
+
+        cfg = ManiSkill2Config(
+            **base_kwargs,
+            env_name=current["env"],
+            scene_name=current["scene"],
+            additional_env_build_kwargs=add_kwargs,
+        )
+        results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     return results
 
@@ -171,7 +278,7 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
     print("\n--- pick_object_among_visual_matching ---")
     results: List[List[bool]] = []
 
-    coke_can_options_arr = [
+    object_orientation = [
         {"lr_switch": True},
         {"upright": True},
         {"laid_vertically": True},
@@ -184,24 +291,26 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
         policy_setup="google_robot",
         control_freq=3,
         sim_freq=513,
-        max_episode_steps=80,
+        max_episode_steps=160,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
         obj_init_x_range=[-0.35, -0.12, 5],
         obj_init_y_range=[-0.02, 0.42, 5],
+        obj_variation_mode="episode_xy",
+        obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
     )
 
     for urdf in urdf_versions:
-        for opt in coke_can_options_arr:
+        for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name="GraspSingleRandomObjectDistractorInScene-v0",
                 scene_name="google_pick_coke_can_1_v4",
                 rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
-                additional_env_build_kwargs={**opt, "urdf_version": urdf, "distractor_config": "less"},
+                additional_env_build_kwargs={**orientation, "urdf_version": urdf, "distractor_config": "less"},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
@@ -212,7 +321,7 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
     print("\n--- pick_object_among_variant_agg ---")
     results: List[List[bool]] = []
 
-    coke_can_options_arr = [
+    object_orientation = [
         {"lr_switch": True},
         {"upright": True},
         {"laid_vertically": True},
@@ -223,57 +332,59 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
         policy_setup="google_robot",
         control_freq=3,
         sim_freq=513,
-        max_episode_steps=80,
+        max_episode_steps=160,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
         obj_init_x_range=[-0.35, -0.12, 5],
         obj_init_y_range=[-0.02, 0.42, 5],
+        obj_variation_mode="episode_xy",
+        obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
     )
 
     # base
-    for opt in coke_can_options_arr:
+    for orientation in object_orientation:
         cfg = ManiSkill2Config(
             **base_kwargs,
             env_name="GraspSingleRandomObjectDistractorInScene-v0",
             scene_name="google_pick_coke_can_1_v4",
-            additional_env_build_kwargs={**opt, "distractor_config": "less"},
+            additional_env_build_kwargs={**orientation, "distractor_config": "less"},
         )
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # table textures (baked)
     baked_scenes = ["Baked_sc1_staging_objaverse_cabinet1_h870", "Baked_sc1_staging_objaverse_cabinet2_h870"]
     for scene in baked_scenes:
-        for opt in coke_can_options_arr:
+        for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name="GraspSingleRandomObjectDistractorInScene-v0",
                 scene_name=scene,
-                additional_env_build_kwargs={**opt, "distractor_config": "less"},
+                additional_env_build_kwargs={**orientation, "distractor_config": "less"},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # backgrounds
     bg_scenes = ["google_pick_coke_can_1_v4_alt_background", "google_pick_coke_can_1_v4_alt_background_2"]
     for scene in bg_scenes:
-        for opt in coke_can_options_arr:
+        for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name="GraspSingleRandomObjectDistractorInScene-v0",
                 scene_name=scene,
-                additional_env_build_kwargs={**opt, "distractor_config": "less"},
+                additional_env_build_kwargs={**orientation, "distractor_config": "less"},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # lightings (darker / brighter)
-    for opt in coke_can_options_arr:
+    for orientation in object_orientation:
         cfg = ManiSkill2Config(
             **base_kwargs,
             env_name="GraspSingleRandomObjectDistractorInScene-v0",
             scene_name="google_pick_coke_can_1_v4",
-            additional_env_build_kwargs={**opt, "slightly_darker_lighting": True, "distractor_config": "less"},
+            additional_env_build_kwargs={**orientation, "slightly_darker_lighting": True, "distractor_config": "less"},
         )
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
@@ -281,19 +392,19 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
             **base_kwargs,
             env_name="GraspSingleRandomObjectDistractorInScene-v0",
             scene_name="google_pick_coke_can_1_v4",
-            additional_env_build_kwargs={**opt, "slightly_brighter_lighting": True, "distractor_config": "less"},
+            additional_env_build_kwargs={**orientation, "slightly_brighter_lighting": True, "distractor_config": "less"},
         )
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # camera orientations
     alt_envs = ["GraspSingleRandomObjectDistractorAltGoogleCameraInScene-v0", "GraspSingleRandomObjectDistractorAltGoogleCamera2InScene-v0"]
     for env in alt_envs:
-        for opt in coke_can_options_arr:
+        for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
                 env_name=env,
                 scene_name="google_pick_coke_can_1_v4",
-                additional_env_build_kwargs={**opt, "distractor_config": "less"},
+                additional_env_build_kwargs={**orientation, "distractor_config": "less"},
             )
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
@@ -475,7 +586,7 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[L
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.21, 0.21, 1],
         obj_variation_mode="episode",
-        obj_episode_range=[0, 60],
+        obj_episode_range=[0, 30],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
@@ -531,11 +642,11 @@ def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         policy_setup="google_robot",
         control_freq=3,
         sim_freq=513,
-        max_episode_steps=80,
+        max_episode_steps=160,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.21, 0.21, 1],
         obj_variation_mode="episode",
-        obj_episode_range=[0, 60],
+        obj_episode_range=[0, 30],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
@@ -568,11 +679,13 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -
         policy_setup="google_robot",
         control_freq=3,
         sim_freq=513,
-        max_episode_steps=200,
+        max_episode_steps=400,
         ckpt_path=ckpt_path,
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[-0.08, -0.02, 3],
         obj_init_y_range=[-0.02, 0.08, 3],
+        obj_variation_mode="episode_xy",
+        obj_episode_range=[0, 3],
     )
 
     overlay_poses = [
@@ -626,12 +739,14 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         policy_setup="google_robot",
         control_freq=3,
         sim_freq=513,
-        max_episode_steps=200,
+        max_episode_steps=400,
         ckpt_path=ckpt_path,
         additional_env_build_kwargs={"model_ids": "apple"},
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[-0.08, -0.02, 3],
         obj_init_y_range=[-0.02, 0.08, 3],
+        obj_variation_mode="episode_xy",
+        obj_episode_range=[0, 3],
         robot_init_x_range=[0.65, 0.65, 1],
         robot_init_y_range=[-0.2, 0.2, 3],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
@@ -688,7 +803,7 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
 
-    # vm_results += pick_object_visual_matching(env_policy, ckpt_path)
+    vm_results += pick_object_visual_matching(env_policy, ckpt_path)
     sim_results += pick_object_variant_agg(env_policy, ckpt_path)
 
     vm_results += pick_object_among_visual_matching(env_policy, ckpt_path)
