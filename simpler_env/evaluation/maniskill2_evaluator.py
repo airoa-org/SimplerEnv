@@ -35,6 +35,7 @@ def run_maniskill2_eval_single_episode(
     enable_raytracing=False,
     additional_env_save_tags=None,
     logging_dir="./results",
+    index=None,
 ):
     if additional_env_build_kwargs is None:
         additional_env_build_kwargs = {}
@@ -106,6 +107,7 @@ def run_maniskill2_eval_single_episode(
 
     timestep = 0
     success = "failure"
+    cost_time = 999
     # action_ensemble = model.action_ensemble_temp  if hasattr(model, "action_ensemble") else "none"
 
     # Step the environment
@@ -125,6 +127,8 @@ def run_maniskill2_eval_single_episode(
         obs, reward, done, truncated, info = env.step(
             np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
         )
+
+        cost_time = min(cost_time, timestep) if info["success"] else 999
 
         success = "success" if done else "failure"
         new_task_description = env.get_language_instruction()
@@ -154,7 +158,7 @@ def run_maniskill2_eval_single_episode(
     if obj_variation_mode == "xy":
         video_name = f"{success}_obj_{obj_init_x}_{obj_init_y}"
     elif obj_variation_mode == "episode":
-        video_name = f"{success}_obj_episode_{obj_episode_id}"
+        video_name = f"{success}_idx_{index}_obj_episode_{obj_episode_id}"
     for k, v in episode_stats.items():
         video_name = video_name + f"_{k}_{v}"
     video_name = video_name + ".mp4"
@@ -174,6 +178,12 @@ def run_maniskill2_eval_single_episode(
     os.makedirs(action_root, exist_ok=True)
     action_path = action_root + os.path.basename(action_path)
     model.visualize_epoch(predicted_actions, images, save_path=action_path)
+
+    # save summary
+    summary_file = os.path.dirname(video_path) + "/summary.txt"
+    with open(summary_file, 'a', encoding='utf-8') as file:
+        file.write(task_description + "," + success + "," + str(cost_time) + '\n')
+
     return success == "success"
 
 
@@ -230,7 +240,9 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
                     **kwargs,
                 )
     elif args.obj_variation_mode == "episode":
-        for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
+        import random
+        sampled_ids = random.sample(range(1000), args.obj_episode_range[1])
+        for idx, obj_episode_id in enumerate(sampled_ids):
             success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs)
     elif args.obj_variation_mode == "episode_xy":
         for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):

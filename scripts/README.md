@@ -46,9 +46,9 @@
 ### 1. Docker構築
 ```bash
 git clone https://github.com/airoa-org/SimplerEnv.git
+cd SimplerEnv
 git checkout origin/benchmark-v2
 git submodule update --init --recursive
-cd SimplerEnv
 cp docker/Dockerfile .
 docker build -t simpler_env .
 ```
