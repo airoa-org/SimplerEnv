@@ -2,9 +2,11 @@
 Evaluate a model on ManiSkill2 environment.
 """
 
+import csv
 import os
 
 import numpy as np
+from tqdm import tqdm
 from transforms3d.euler import quat2euler
 
 from simpler_env.utils.env.env_builder import build_maniskill2_env, get_robot_control_mode
@@ -14,6 +16,8 @@ from simpler_env.utils.visualization import write_interval_video, write_video
 
 def run_maniskill2_eval_single_episode(
     model,
+    task_name,
+    episode_id,
     ckpt_path,
     robot_name,
     env_name,
@@ -35,7 +39,6 @@ def run_maniskill2_eval_single_episode(
     enable_raytracing=False,
     additional_env_save_tags=None,
     logging_dir="./results",
-    index=None,
 ):
     if additional_env_build_kwargs is None:
         additional_env_build_kwargs = {}
@@ -112,65 +115,72 @@ def run_maniskill2_eval_single_episode(
 
     # Step the environment
     task_descriptions = []
-    while not (predicted_terminated or truncated):
-        # step the model; "raw_action" is raw model action output; "action" is the processed action to be sent into maniskill env
-        raw_action, action = model.step(image, task_description, eef_pos=obs["agent"]["eef_pos"])
-        predicted_actions.append(raw_action)
-        predicted_terminated = bool(action["terminate_episode"][0] > 0)
-        if predicted_terminated:
-            if not is_final_subtask:
-                # advance the environment to the next subtask
-                predicted_terminated = False
-                env.advance_to_next_subtask()
+    with tqdm(total=max_episode_steps, desc=f"Episode {episode_id}", leave=False) as pbar:
+        while not (predicted_terminated or truncated):
+            # step the model; "raw_action" is raw model action output; "action" is the processed action to be sent into maniskill env
+            raw_action, action = model.step(image, task_description, eef_pos=obs["agent"]["eef_pos"])
+            predicted_actions.append(raw_action)
+            predicted_terminated = bool(action["terminate_episode"][0] > 0)
+            if predicted_terminated:
+                if not is_final_subtask:
+                    # advance the environment to the next subtask
+                    predicted_terminated = False
+                    env.advance_to_next_subtask()
 
-        # step the environment
-        obs, reward, done, truncated, info = env.step(
-            np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
-        )
+            # step the environment
+            obs, reward, done, truncated, info = env.step(
+                np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
+            )
 
-        cost_time = min(cost_time, timestep) if info["success"] else 999
+            cost_time = min(cost_time, timestep) if info["success"] else 999
 
-        success = "success" if done else "failure"
-        new_task_description = env.get_language_instruction()
-        if new_task_description != task_description:
-            task_description = new_task_description
-            print(task_description)
-        is_final_subtask = env.is_final_subtask()
+            success = "success" if done else "failure"
+            new_task_description = env.get_language_instruction()
+            if new_task_description != task_description:
+                task_description = new_task_description
+                print(task_description)
+            is_final_subtask = env.is_final_subtask()
 
-        print(timestep, info)
+            # print(timestep, info)
 
-        image = get_image_from_maniskill2_obs_dict(env, obs, camera_name=obs_camera_name)
-        images.append(image)
-        task_descriptions.append(task_description)
-        timestep += 1
+            image = get_image_from_maniskill2_obs_dict(env, obs, camera_name=obs_camera_name)
+            images.append(image)
+            task_descriptions.append(task_description)
+            timestep += 1
+            pbar.update(1)
 
     episode_stats = info.get("episode_stats", {})
 
-    # save video
-    env_save_name = env_name
-
-    for k, v in additional_env_build_kwargs.items():
-        env_save_name = env_save_name + f"_{k}_{v}"
-    if additional_env_save_tags is not None:
-        env_save_name = env_save_name + f"_{additional_env_save_tags}"
     ckpt_path_basename = ckpt_path if ckpt_path[-1] != "/" else ckpt_path[:-1]
     ckpt_path_basename = ckpt_path_basename.split("/")[-1]
-    if obj_variation_mode == "xy":
-        video_name = f"{success}_obj_{obj_init_x}_{obj_init_y}"
-    elif obj_variation_mode == "episode":
-        video_name = f"{success}_idx_{index}_obj_episode_{obj_episode_id}"
-    for k, v in episode_stats.items():
-        video_name = video_name + f"_{k}_{v}"
-    video_name = video_name + ".mp4"
-    if rgb_overlay_path is not None:
-        rgb_overlay_path_str = os.path.splitext(os.path.basename(rgb_overlay_path))[0]
+    base_logging_dir = os.path.join(logging_dir, ckpt_path_basename)
+
+    # このロジックはあったほうがいいかも
+    # if not os.path.exists(base_logging_dir):
+    #     ckpt_logging_dir = base_logging_dir
+    # else:
+    #     i = 1
+    #     while True:
+    #         new_logging_dir = f"{base_logging_dir}_{i}"
+    #         if not os.path.exists(new_logging_dir):
+    #             ckpt_logging_dir = new_logging_dir
+    #             break
+    #         i += 1
+    # logging_dir = os.path.join(ckpt_logging_dir, task_name)
+    # os.makedirs(logging_dir, exist_ok=True)
+
+    ckpt_logging_dir = base_logging_dir
+    logging_dir = os.path.join(ckpt_logging_dir, task_name)
+    os.makedirs(logging_dir, exist_ok=True)
+
+    # save video
+    if success == "success":
+        success_emoji = "✅"
     else:
-        rgb_overlay_path_str = "None"
-    r, p, y = quat2euler(robot_init_quat)
-    video_path = f"{scene_name}/{control_mode}/{env_save_name}/rob_{robot_init_x}_{robot_init_y}_rot_{r:.3f}_{p:.3f}_{y:.3f}_rgb_overlay_{rgb_overlay_path_str}/{video_name}"
-    video_path = os.path.join(logging_dir, video_path)
+        success_emoji = "❌"
+    video_path = os.path.join(logging_dir, f"{episode_id}_{success}.mp4")
     write_video(video_path, images, fps=5)
-    print(f"Video saved to {video_path}")
+    print(f"{success_emoji} Video saved to {video_path}")
 
     # save action trajectory
     action_path = video_path.replace(".mp4", ".png")
@@ -180,9 +190,74 @@ def run_maniskill2_eval_single_episode(
     model.visualize_epoch(predicted_actions, images, save_path=action_path)
 
     # save summary
-    summary_file = os.path.dirname(video_path) + "/summary.txt"
-    with open(summary_file, 'a', encoding='utf-8') as file:
-        file.write(task_description + "," + success + "," + str(cost_time) + '\n')
+    summary_file = os.path.join(ckpt_logging_dir, "summary.csv")
+    file_exists = os.path.exists(summary_file)
+    with open(summary_file, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        header = ["task_name", "episode_id", "success", "task_description", "cost_time"]
+        data_row = [task_name, episode_id, success, task_description, str(cost_time)]
+        if not file_exists:
+            writer.writerow(header)
+        writer.writerow(data_row)
+
+    env_save_name = env_name
+    for k, v in additional_env_build_kwargs.items():
+        env_save_name = env_save_name + f"_{k}_{v}"
+    if additional_env_save_tags is not None:
+        env_save_name = env_save_name + f"_{additional_env_save_tags}"
+
+    if obj_variation_mode == "xy" or obj_variation_mode == "episode_xy":
+        add_info = f"{success}_obj_{obj_init_x}_{obj_init_y}"
+    elif obj_variation_mode == "episode":
+        add_info = f"{success}_idx_{episode_id}_obj_episode_{obj_episode_id}"
+    for k, v in episode_stats.items():
+        add_info = add_info + f"_{k}_{v}"
+
+    if rgb_overlay_path is not None:
+        rgb_overlay_path_str = os.path.splitext(os.path.basename(rgb_overlay_path))[0]
+    else:
+        rgb_overlay_path_str = "None"
+
+    r, p, y = quat2euler(robot_init_quat)
+    details_summary_file = os.path.join(ckpt_logging_dir, "details_summary.csv")
+    file_exists = os.path.exists(details_summary_file)
+
+    with open(details_summary_file, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        header = [
+            "task_name",
+            "episode_id",
+            "success",
+            "task_description",
+            "cost_time",
+            "scene_name",
+            "control_mode",
+            "env_save_name",
+            "rgb_overlay_path",
+            "robot_init_xy",
+            "robot_init_rpy",
+            "add_info",
+            "additional_env_build_kwargs",
+        ]
+        data_row = [
+            task_name,
+            episode_id,
+            success,
+            task_description,
+            str(cost_time),
+            scene_name,
+            control_mode,
+            env_save_name,
+            rgb_overlay_path_str,
+            f"{robot_init_x:.3f}_{robot_init_y:.3f}",
+            f"{r:.3f}_{p:.3f}_{y:.3f}",
+            add_info,
+            additional_env_build_kwargs,
+        ]
+
+        if not file_exists:
+            writer.writerow(header)
+        writer.writerow(data_row)
 
     return success == "success"
 
@@ -213,6 +288,8 @@ def maniskill2_evaluator(model, args):
 def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat):
     kwargs = dict(
         model=model,
+        task_name=args.task_name,
+        episode_id=args.episode_id,
         ckpt_path=args.ckpt_path,
         robot_name=args.robot,
         env_name=args.env_name,
@@ -241,9 +318,10 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
                 )
     elif args.obj_variation_mode == "episode":
         import random
+
         sampled_ids = random.sample(range(1000), args.obj_episode_range[1])
         for idx, obj_episode_id in enumerate(sampled_ids):
-            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs)
+            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, episode_id=idx, **kwargs)
     elif args.obj_variation_mode == "episode_xy":
         for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
             obj_init_x = np.random.uniform(args.obj_init_x_range[0], args.obj_init_x_range[1])
