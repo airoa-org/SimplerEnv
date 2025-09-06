@@ -2,8 +2,8 @@
 Evaluate a model on ManiSkill2 environment.
 """
 
-import csv
 import os
+import json
 
 import numpy as np
 from tqdm import tqdm
@@ -189,75 +189,38 @@ def run_maniskill2_eval_single_episode(
     action_path = action_root + os.path.basename(action_path)
     model.visualize_epoch(predicted_actions, images, save_path=action_path)
 
-    # save summary
-    summary_file = os.path.join(ckpt_logging_dir, "summary.csv")
-    file_exists = os.path.exists(summary_file)
-    with open(summary_file, "a", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        header = ["task_name", "episode_id", "success", "task_description", "cost_time"]
-        data_row = [task_name, episode_id, success, task_description, str(cost_time)]
-        if not file_exists:
-            writer.writerow(header)
-        writer.writerow(data_row)
+    # save json summary
+    episode_record = {
+        "episode_id": episode_id,
+        **(
+            {"obj_episode": obj_episode_id}
+            if obj_variation_mode in ("episode", "episode_xy")
+            else {"obj_init_xy": [obj_init_x, obj_init_y]}
+        ),
+        "task_description": task_description,
+        "episode_stats": episode_stats,
+        "final": success, 
+        "cost_time": cost_time
+    }
 
-    env_save_name = env_name
-    for k, v in additional_env_build_kwargs.items():
-        env_save_name = env_save_name + f"_{k}_{v}"
-    if additional_env_save_tags is not None:
-        env_save_name = env_save_name + f"_{additional_env_save_tags}"
-
-    if obj_variation_mode == "xy" or obj_variation_mode == "episode_xy":
-        add_info = f"{success}_obj_{obj_init_x}_{obj_init_y}"
-    elif obj_variation_mode == "episode":
-        add_info = f"{success}_idx_{episode_id}_obj_episode_{obj_episode_id}"
-    for k, v in episode_stats.items():
-        add_info = add_info + f"_{k}_{v}"
-
-    if rgb_overlay_path is not None:
-        rgb_overlay_path_str = os.path.splitext(os.path.basename(rgb_overlay_path))[0]
-    else:
-        rgb_overlay_path_str = "None"
-
+    # Details
     r, p, y = quat2euler(robot_init_quat)
-    details_summary_file = os.path.join(ckpt_logging_dir, "details_summary.csv")
-    file_exists = os.path.exists(details_summary_file)
+    episode_record["details"] = {
+        "scene_name": scene_name,
+        "control_mode": control_mode,
+        "env_save_name": env_name,
+        "rgb_overlay_path": (os.path.splitext(os.path.basename(rgb_overlay_path))[0] if rgb_overlay_path else "None"),
+        "robot_init_xy": [float(f"{robot_init_x:.3f}"), float(f"{robot_init_y:.3f}")],
+        "robot_init_rpy": [float(f"{r:.3f}"), float(f"{p:.3f}"), float(f"{y:.3f}")],
+        "add_info": (
+            (f"{success}_obj_{obj_init_x}_{obj_init_y}") if obj_variation_mode in ("xy", "episode_xy")
+            else (f"{success}_idx_{episode_id}_obj_episode_{obj_episode_id}")
+        ) + "".join([f"_{k}_{v}" for k, v in episode_stats.items()]),
+        "additional_env_build_kwargs": additional_env_build_kwargs,
+    }
 
-    with open(details_summary_file, "a", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        header = [
-            "task_name",
-            "episode_id",
-            "success",
-            "task_description",
-            "cost_time",
-            "scene_name",
-            "control_mode",
-            "env_save_name",
-            "rgb_overlay_path",
-            "robot_init_xy",
-            "robot_init_rpy",
-            "add_info",
-            "additional_env_build_kwargs",
-        ]
-        data_row = [
-            task_name,
-            episode_id,
-            success,
-            task_description,
-            str(cost_time),
-            scene_name,
-            control_mode,
-            env_save_name,
-            rgb_overlay_path_str,
-            f"{robot_init_x:.3f}_{robot_init_y:.3f}",
-            f"{r:.3f}_{p:.3f}_{y:.3f}",
-            add_info,
-            additional_env_build_kwargs,
-        ]
-
-        if not file_exists:
-            writer.writerow(header)
-        writer.writerow(data_row)
+    # Write to json
+    _append_episode_to_json(ckpt_logging_dir, task_name, episode_record)
 
     return success == "success"
 
@@ -272,7 +235,7 @@ def maniskill2_evaluator(model, args):
             for robot_init_y in args.robot_init_ys:
                 for robot_init_quat in args.robot_init_quats:
                     success = _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
-                    success_arr.append(success)
+                    success_arr += success
 
     if args.robot_variation_mode == "episode_xy":
         for robot_episode_id in range(args.robot_episode_range[0], args.robot_episode_range[1]):
@@ -280,7 +243,7 @@ def maniskill2_evaluator(model, args):
             robot_init_y = np.random.uniform(args.robot_init_y_range[0], args.robot_init_y_range[1])
             for robot_init_quat in args.robot_init_quats:
                 success = _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
-                success_arr.append(success)
+                success_arr += success
 
     return success_arr
 
@@ -308,6 +271,8 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
         obs_camera_name=args.obs_camera_name,
         logging_dir=args.logging_dir,
     )
+    success_arr = []
+
     if args.obj_variation_mode == "xy":
         for obj_init_x in args.obj_init_xs:
             for obj_init_y in args.obj_init_ys:
@@ -316,18 +281,85 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
                     obj_init_y=obj_init_y,
                     **kwargs,
                 )
+                success_arr.append(success)
+
     elif args.obj_variation_mode == "episode":
         import random
-
-        sampled_ids = random.sample(range(1000), args.obj_episode_range[1])
+        sampled_ids = random.choices(range(36), k=args.obj_episode_range[1])
         for idx, obj_episode_id in enumerate(sampled_ids):
-            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, episode_id=idx, **kwargs)
+            if "widowx" in args.robot:
+                if "episode_id" in kwargs.keys():
+                    kwargs.pop("episode_id")
+                success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, episode_id=idx, **kwargs)
+            elif "google_robot" in args.robot:
+                success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs)
+            else:
+                raise NotImplementedError()
+            success_arr.append(success)
+
     elif args.obj_variation_mode == "episode_xy":
         for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
             obj_init_x = np.random.uniform(args.obj_init_x_range[0], args.obj_init_x_range[1])
             obj_init_y = np.random.uniform(args.obj_init_y_range[0], args.obj_init_y_range[1])
             success = run_maniskill2_eval_single_episode(obj_init_x=obj_init_x, obj_init_y=obj_init_y, **kwargs)
+            success_arr.append(success)
+    
     else:
         raise NotImplementedError()
 
-    return success
+    return success_arr
+
+
+def _json_default(o):
+    if isinstance(o, np.bool_):
+        return bool(o)
+    if isinstance(o, np.integer):
+        return int(o)
+    if isinstance(o, np.floating):
+        return float(o)
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    return str(o)
+
+def _sanitize_for_json(x):
+    if isinstance(x, dict):
+        return {k: _sanitize_for_json(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_sanitize_for_json(v) for v in x]
+    if isinstance(x, np.ndarray):
+        return x.tolist()
+    if isinstance(x, np.generic):
+        return x.item()
+    return x
+
+def _append_episode_to_json(ckpt_logging_dir, task_name, episode_record):
+    json_path = os.path.join(ckpt_logging_dir, "results.json")
+    data = []
+
+    # Read existing json file
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, list):
+                data = []
+        except Exception:
+            data = []
+
+    # Update
+    idx = None
+    for i, item in enumerate(data):
+        if isinstance(item, dict) and item.get("task_name") == task_name and isinstance(item.get("episodes"), list):
+            idx = i
+            break
+
+    episode_record = _sanitize_for_json(episode_record)
+
+    if idx is None:
+        data.append({"task_name": task_name, "episodes": [episode_record]})
+    else:
+        data[idx]["episodes"].append(episode_record)
+
+    # Write
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2, default=_json_default)
