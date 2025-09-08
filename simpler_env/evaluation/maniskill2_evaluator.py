@@ -191,7 +191,7 @@ def run_maniskill2_eval_single_episode(
 
     # save json summary
     episode_record = {
-        "episode_id": episode_id,
+        "trial_id": episode_id,
         **(
             {"obj_episode": obj_episode_id}
             if obj_variation_mode in ("episode", "episode_xy")
