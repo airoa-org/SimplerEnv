@@ -27,7 +27,7 @@ DEFAULT_TOPS = [
 # Task 1
 @register_env("GraspRandomObjectInScene-v0", max_episode_steps=60)
 class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
-    def __init__(self, candidate_source_names: List[str] = DEFAULT_OBJECTS, grasp_hold_seconds: float = 5.0, **kwargs):
+    def __init__(self, candidate_source_names: List[str] = DEFAULT_OBJECTS, grasp_hold_seconds: float = 3.0, **kwargs):
         xy_center = np.array([-0.16, 0.00])
         half_edge_length_x = 0.075
         half_edge_length_y = 0.075
@@ -52,7 +52,7 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
         self._placeholder_src = "__random_src_placeholder__"
         self._user_src_pool = candidate_source_names
 
-        self._grasp_hold_steps = int(grasp_hold_seconds * 5)
+        self._grasp_hold_steps = int(grasp_hold_seconds * 5)  # fps = 5
         self.consecutive_grasp = 0
 
         super().__init__(
@@ -98,7 +98,7 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
         self.episode_stats = OrderedDict(
             is_src_obj_grasped=False,
             consecutive_grasp=False,
-            success=False,
+            grasp_stable=False,
         )
 
     def evaluate(self, **kwargs):
@@ -125,7 +125,7 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
         self.episode_stats["consecutive_grasp"] = (
             self.episode_stats["consecutive_grasp"] or consecutive_grasp
         )
-        self.episode_stats["success"] = success
+        self.episode_stats["grasp_stable"] = success
 
         return dict(
             is_src_obj_grasped=is_src_obj_grasped,
@@ -259,7 +259,7 @@ class PutRandomObjectOnRandomTopInScene(PutOnBridgeInSceneEnv):
             src_candidates = list(self._user_src_pool)
         else:
             ban = {"sink", "dummy_sink_target_plane"}
-            ban_kw = ["sink", "plane", "cloth", "towel", "target"]  # 源物体不应是容器/平面
+            ban_kw = ["sink", "plane", "cloth", "towel", "target"]
             src_candidates = [
                 k for k in self.model_db.keys()
                 if (k not in ban) and all(kw not in k for kw in ban_kw)

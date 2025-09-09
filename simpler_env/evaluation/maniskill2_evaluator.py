@@ -13,6 +13,7 @@ from simpler_env.utils.env.env_builder import build_maniskill2_env, get_robot_co
 from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_obs_dict
 from simpler_env.utils.visualization import write_interval_video, write_video
 
+INF_COST = 999
 
 def run_maniskill2_eval_single_episode(
     model,
@@ -108,9 +109,15 @@ def run_maniskill2_eval_single_episode(
     # Initialize model
     model.reset(task_description)
 
+    # Initialize subtasks stats
+    init_episode_stats = env.episode_stats
+    subtasks = {}
+    for k, v in init_episode_stats.items():
+        subtasks[k] = {"status": v, "cost_time": INF_COST}
+
     timestep = 0
     success = "failure"
-    cost_time = 999
+    final_cost_time = INF_COST
     # action_ensemble = model.action_ensemble_temp  if hasattr(model, "action_ensemble") else "none"
 
     # Step the environment
@@ -132,7 +139,12 @@ def run_maniskill2_eval_single_episode(
                 np.concatenate([action["world_vector"], action["rot_axangle"], action["gripper"]]),
             )
 
-            cost_time = min(cost_time, timestep) if info["success"] else 999
+            cur_episode_stats = info.get("episode_stats", {})
+            for k, v in cur_episode_stats.items():
+                subtasks[k]["status"] = v
+                subtasks[k]["cost_time"] = min(subtasks[k]["cost_time"], timestep) if v else INF_COST
+
+            final_cost_time = min(final_cost_time, timestep) if info["success"] else INF_COST
 
             success = "success" if done else "failure"
             new_task_description = env.get_language_instruction()
@@ -198,9 +210,9 @@ def run_maniskill2_eval_single_episode(
             else {"obj_init_xy": [obj_init_x, obj_init_y]}
         ),
         "task_description": task_description,
-        "episode_stats": episode_stats,
-        "final": success, 
-        "cost_time": cost_time
+        "episode_stats": subtasks,
+        "final_status": success, 
+        "final_cost_time": final_cost_time
     }
 
     # Details
