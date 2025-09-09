@@ -814,20 +814,40 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
 
-    vm_results += pick_object_visual_matching(env_policy, ckpt_path)
-    sim_results += pick_object_variant_agg(env_policy, ckpt_path)
+    pick_object_vm_results = pick_object_visual_matching(env_policy, ckpt_path)
+    vm_results += pick_object_vm_results
+    print(f"Pick Object Visual Matching: {np.mean(pick_object_vm_results)} ({np.sum(pick_object_vm_results)} / {np.prod(np.shape(pick_object_vm_results))})")
+    pick_object_sim_results = pick_object_variant_agg(env_policy, ckpt_path)
+    sim_results += pick_object_sim_results
+    print(f"Pick Object Variant Agg: {np.mean(pick_object_sim_results)} ({np.sum(pick_object_sim_results)} / {np.prod(np.shape(pick_object_sim_results))})")
 
-    vm_results += pick_object_among_visual_matching(env_policy, ckpt_path)
-    sim_results += pick_object_among_variant_agg(env_policy, ckpt_path)
+    pick_object_among_vm_results = pick_object_among_visual_matching(env_policy, ckpt_path)
+    vm_results += pick_object_among_vm_results
+    print(f"Pick Object Among Visual Matching: {np.mean(pick_object_among_vm_results)} ({np.sum(pick_object_among_vm_results)} / {np.prod(np.shape(pick_object_among_vm_results))})")
+    pick_object_among_sim_results = pick_object_among_variant_agg(env_policy, ckpt_path)
+    sim_results += pick_object_among_sim_results
+    print(f"Pick Object Among Variant Agg: {np.mean(pick_object_among_sim_results)} ({np.sum(pick_object_among_sim_results)} / {np.prod(np.shape(pick_object_among_sim_results))})")
 
-    vm_results += drawer_visual_matching(env_policy, ckpt_path)
-    sim_results += drawer_variant_agg(env_policy, ckpt_path)
+    drawer_vm_results = drawer_visual_matching(env_policy, ckpt_path)
+    vm_results += drawer_vm_results
+    print(f"Drawer Visual Matching: {np.mean(drawer_vm_results)} ({np.sum(drawer_vm_results)} / {np.prod(np.shape(drawer_vm_results))})")
+    drawer_sim_results = drawer_variant_agg(env_policy, ckpt_path)
+    sim_results += drawer_sim_results
+    print(f"Drawer Variant Agg: {np.mean(drawer_sim_results)} ({np.sum(drawer_sim_results)} / {np.prod(np.shape(drawer_sim_results))})")
 
-    vm_results += move_near_visual_matching(env_policy, ckpt_path)
-    sim_results += move_near_variant_agg(env_policy, ckpt_path)
+    move_near_vm_results = move_near_visual_matching(env_policy, ckpt_path)
+    vm_results += move_near_vm_results
+    print(f"Move Near Visual Matching: {np.mean(move_near_vm_results)} ({np.sum(move_near_vm_results)} / {np.prod(np.shape(move_near_vm_results))})")
+    move_near_sim_results = move_near_variant_agg(env_policy, ckpt_path)
+    sim_results += move_near_sim_results
+    print(f"Move Near Variant Agg: {np.mean(move_near_sim_results)} ({np.sum(move_near_sim_results)} / {np.prod(np.shape(move_near_sim_results))})")
 
-    vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path)
-    sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path)
+    put_in_drawer_vm_results = put_in_drawer_visual_matching(env_policy, ckpt_path)
+    vm_results += put_in_drawer_vm_results
+    print(f"Put In Drawer Visual Matching: {np.mean(put_in_drawer_vm_results)} ({np.sum(put_in_drawer_vm_results)} / {np.prod(np.shape(put_in_drawer_vm_results))})")
+    put_in_drawer_sim_results = put_in_drawer_variant_agg(env_policy, ckpt_path)
+    sim_results += put_in_drawer_sim_results
+    print(f"Put In Drawer Variant Agg: {np.mean(put_in_drawer_sim_results)} ({np.sum(put_in_drawer_sim_results)} / {np.prod(np.shape(put_in_drawer_sim_results))})")
 
     # ロバストスコア
     sim_score = calculate_robust_score(sim_results)
