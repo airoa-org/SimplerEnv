@@ -14,6 +14,8 @@ from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_ob
 from simpler_env.utils.visualization import write_interval_video, write_video
 
 INF_COST = 999
+master_seed = 42
+rng = np.random.RandomState(master_seed)
 
 def run_maniskill2_eval_single_episode(
     model,
@@ -86,7 +88,8 @@ def run_maniskill2_eval_single_episode(
         env_reset_options["obj_init_options"] = {
             "episode_id": obj_episode_id,
         }
-    episode_seed = np.random.randint(0, 100000)
+    # episode_seed = np.random.randint(0, 100000)
+    episode_seed = rng.randint(0, 100000)
 
     obs, _ = env.reset(options=env_reset_options, seed=episode_seed)
     # for long-horizon environments, we check if the current subtask is the final subtask
@@ -251,8 +254,8 @@ def maniskill2_evaluator(model, args):
 
     if args.robot_variation_mode == "episode_xy":
         for robot_episode_id in range(args.robot_episode_range[0], args.robot_episode_range[1]):
-            robot_init_x = np.random.uniform(args.robot_init_x_range[0], args.robot_init_x_range[1])
-            robot_init_y = np.random.uniform(args.robot_init_y_range[0], args.robot_init_y_range[1])
+            robot_init_x = rng.uniform(args.robot_init_x_range[0], args.robot_init_x_range[1])
+            robot_init_y = rng.uniform(args.robot_init_y_range[0], args.robot_init_y_range[1])
             for robot_init_quat in args.robot_init_quats:
                 success = _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
                 success_arr += success
@@ -296,8 +299,7 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
                 success_arr.append(success)
 
     elif args.obj_variation_mode == "episode":
-        import random
-        sampled_ids = random.choices(range(36), k=args.obj_episode_range[1])
+        sampled_ids = rng.choice(range(36), size=args.obj_episode_range[1], replace=True)
         for idx, obj_episode_id in enumerate(sampled_ids):
             if "widowx" in args.robot:
                 if "episode_id" in kwargs.keys():
@@ -311,8 +313,8 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
 
     elif args.obj_variation_mode == "episode_xy":
         for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
-            obj_init_x = np.random.uniform(args.obj_init_x_range[0], args.obj_init_x_range[1])
-            obj_init_y = np.random.uniform(args.obj_init_y_range[0], args.obj_init_y_range[1])
+            obj_init_x = rng.uniform(args.obj_init_x_range[0], args.obj_init_x_range[1])
+            obj_init_y = rng.uniform(args.obj_init_y_range[0], args.obj_init_y_range[1])
             success = run_maniskill2_eval_single_episode(obj_init_x=obj_init_x, obj_init_y=obj_init_y, **kwargs)
             success_arr.append(success)
     
