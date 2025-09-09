@@ -1,0 +1,30 @@
+import argparse
+
+from scripts.g3_lerobotpi.g3_configuration_pi0 import G3PI0Config
+from scripts.g3_lerobotpi.g3_pi0_or_fast import G3LerobotPiFastInference
+from simpler_env.evaluation.evaluate import run_comprehensive_evaluation
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
+    parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
+    parser.add_argument("--action-ensemble", action="store_true", help="Use action ensemble if set.")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    ckpt_path = args.ckpt_path
+
+    policy = G3LerobotPiFastInference(
+        saved_model_path=ckpt_path,
+        policy_setup="google_robot",
+        action_scale=1.0,
+    )
+
+    print("Policy initialized. Starting evaluation...")
+
+    final_scores = run_comprehensive_evaluation(env_policy=policy, ckpt_path=args.ckpt_path)
+
+    print("\nEvaluation finished.")
+    print(f"Final calculated scores: {final_scores}")
