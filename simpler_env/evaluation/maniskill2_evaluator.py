@@ -178,7 +178,16 @@ def run_maniskill2_eval_single_episode(
         success_emoji = "✅"
     else:
         success_emoji = "❌"
-    video_path = os.path.join(logging_dir, f"{episode_id}_{success}.mp4")
+
+    episode_stats = info.get("episode_stats", {})
+    if obj_variation_mode == "xy":
+        video_name = f"{success}_{episode_id}_obj_{obj_init_x}_{obj_init_y}"
+    elif obj_variation_mode == "episode":
+        video_name = f"{success}_{episode_id}_obj_episode_{obj_episode_id}"
+    else:
+        raise Exception(f"Unknown obj_variation_mode: {obj_variation_mode}")
+    
+    video_path = os.path.join(logging_dir, f"{video_name}.mp4")
     write_video(video_path, images, fps=5)
     print(f"{success_emoji} Video saved to {video_path}")
 
