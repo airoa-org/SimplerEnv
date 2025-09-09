@@ -20,6 +20,7 @@ if __name__ == "__main__":
         saved_model_path=ckpt_path,
         policy_setup="google_robot",
         action_scale=1.0,
+        action_ensemble=args.action_ensemble,
     )
 
     print("Policy initialized. Starting evaluation...")
