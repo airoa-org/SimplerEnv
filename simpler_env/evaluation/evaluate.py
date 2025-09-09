@@ -62,6 +62,7 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> 
         obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_visual_matching",
     )
 
     for urdf in urdf_versions:
@@ -103,6 +104,7 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
         obj_episode_range=[0, 4],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_variant_agg",
     )
 
     # base
@@ -234,6 +236,7 @@ def pick_object_variant_agg(
         obj_episode_range=[0, 4],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_variant_agg",
     )
 
     # 単一プール（どれが選ばれたか識別できるよう (kind, value) で保持）
@@ -301,6 +304,7 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
         obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_among_visual_matching",
     )
 
     for urdf in urdf_versions:
@@ -342,6 +346,7 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
         obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_among_variant_agg",
     )
 
     # base
@@ -436,6 +441,7 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[
         obj_init_x_range=[0, 0, 1],
         obj_init_y_range=[0, 0, 1],
         scene_name="dummy_drawer",
+        task_name="fractal_drawer_visual_matching",
     )
 
     # 9 overlay poses (A0/A1/A2/B0/B1/B2/C0/C1/C2)
@@ -542,6 +548,7 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[List
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
         obj_init_x_range=[0, 0, 1],
         obj_init_y_range=[0, 0, 1],
+        task_name="fractal_drawer_variant_agg",
     )
 
     # base (enable raytracing)
@@ -590,6 +597,7 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[L
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
+        task_name="fractal_move_near_variant_agg",
     )
 
     # base
@@ -650,6 +658,7 @@ def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
+        task_name="fractal_move_near_visual_matching",
     )
 
     urdf_versions = [None, "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
@@ -686,6 +695,7 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -
         obj_init_y_range=[-0.02, 0.08, 3],
         obj_variation_mode="episode_xy",
         obj_episode_range=[0, 3],
+        task_name="fractal_put_in_drawer_visual_matching",
     )
 
     overlay_poses = [
@@ -750,6 +760,7 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         robot_init_x_range=[0.65, 0.65, 1],
         robot_init_y_range=[-0.2, 0.2, 3],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
+        task_name="fractal_put_in_drawer_variant_agg",
     )
 
     env_names = ["PlaceIntoClosedTopDrawerCustomInScene-v0"]

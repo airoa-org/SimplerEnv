@@ -271,21 +271,20 @@ def maniskill2_evaluator(model, args):
         for robot_init_x in args.robot_init_xs:
             for robot_init_y in args.robot_init_ys:
                 for robot_init_quat in args.robot_init_quats:
-                    success = _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
-                    success_arr.append(success)
+                    success_arr += _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
 
     if args.robot_variation_mode == "episode_xy":
         for robot_episode_id in range(args.robot_episode_range[0], args.robot_episode_range[1]):
             robot_init_x = np.random.uniform(args.robot_init_x_range[0], args.robot_init_x_range[1])
             robot_init_y = np.random.uniform(args.robot_init_y_range[0], args.robot_init_y_range[1])
             for robot_init_quat in args.robot_init_quats:
-                success = _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
-                success_arr.append(success)
+                success_arr +=  _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat)
 
     return success_arr
 
 
 def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat):
+    success_arr = []
     kwargs = dict(
         model=model,
         task_name=args.task_name,
@@ -316,18 +315,21 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
                     obj_init_y=obj_init_y,
                     **kwargs,
                 )
+                success_arr.append(success)
     elif args.obj_variation_mode == "episode":
         import random
 
         sampled_ids = random.sample(range(1000), args.obj_episode_range[1])
         for idx, obj_episode_id in enumerate(sampled_ids):
-            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, episode_id=idx, **kwargs)
+            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs)
+            success_arr.append(success)
     elif args.obj_variation_mode == "episode_xy":
         for obj_episode_id in range(args.obj_episode_range[0], args.obj_episode_range[1]):
             obj_init_x = np.random.uniform(args.obj_init_x_range[0], args.obj_init_x_range[1])
             obj_init_y = np.random.uniform(args.obj_init_y_range[0], args.obj_init_y_range[1])
             success = run_maniskill2_eval_single_episode(obj_init_x=obj_init_x, obj_init_y=obj_init_y, **kwargs)
+            success_arr.append(success)
     else:
         raise NotImplementedError()
 
-    return success
+    return success_arr
