@@ -13,7 +13,7 @@ from omegaconf import DictConfig, OmegaConf
 
 import numpy as np
 import torch
-from simpler_env.evaluation.evaluate import run_comprehensive_evaluation
+from simpler_env.evaluation.fractal_tasks import run_comprehensive_evaluation
 
 from airoa_g2.model.policy.fractal_policy import FractalPolicy
 
