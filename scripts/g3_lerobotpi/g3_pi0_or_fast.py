@@ -23,6 +23,7 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
         action_scale: float = 1.0,
         action_ensemble: bool = True,
         action_ensemble_temp: float = -0.8,
+        sticky_action: bool = True,
     ) -> None:
         gpu_idx = os.environ.get("GPU_IDX", 0)
         self.device = f"cuda:{gpu_idx}"
@@ -41,6 +42,7 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
             raise NotImplementedError(
                 f"Policy setup {policy_setup} not supported for octo models. The other datasets can be found in the huggingface config.json file."
             )
+        self.sticky_action = sticky_action
         self.policy_setup = policy_setup
         self.unnorm_key = unnorm_key
 
@@ -140,32 +142,38 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
         action["rot_axangle"] = action_rotation_axangle * self.action_scale
 
         if self.policy_setup == "google_robot":
-            action["gripper"] = 0
-            current_gripper_action = raw_action["open_gripper"]
-            if self.previous_gripper_action is None:
-                relative_gripper_action = np.array([0])
-                self.previous_gripper_action = current_gripper_action
+            if self.sticky_action:
+                action["gripper"] = 0
+                current_gripper_action = raw_action["open_gripper"]
+                if self.previous_gripper_action is None:
+                    relative_gripper_action = np.array([0])
+                    self.previous_gripper_action = current_gripper_action
+                else:
+                    relative_gripper_action = self.previous_gripper_action - current_gripper_action
+
+                # fix a bug in the SIMPLER code here
+                # self.previous_gripper_action = current_gripper_action
+
+                if np.abs(relative_gripper_action) > 0.5 and (not self.sticky_action_is_on):
+                    self.sticky_action_is_on = True
+                    self.sticky_gripper_action = relative_gripper_action
+                    self.previous_gripper_action = current_gripper_action
+
+                if self.sticky_action_is_on:
+                    self.gripper_action_repeat += 1
+                    relative_gripper_action = self.sticky_gripper_action
+
+                if self.gripper_action_repeat == self.sticky_gripper_num_repeat:
+                    self.sticky_action_is_on = False
+                    self.gripper_action_repeat = 0
+                    self.sticky_gripper_action = 0.0
+
+                action["gripper"] = relative_gripper_action
             else:
-                relative_gripper_action = self.previous_gripper_action - current_gripper_action
-
-            # fix a bug in the SIMPLER code here
-            # self.previous_gripper_action = current_gripper_action
-
-            if np.abs(relative_gripper_action) > 0.5 and (not self.sticky_action_is_on):
-                self.sticky_action_is_on = True
-                self.sticky_gripper_action = relative_gripper_action
-                self.previous_gripper_action = current_gripper_action
-
-            if self.sticky_action_is_on:
-                self.gripper_action_repeat += 1
-                relative_gripper_action = self.sticky_gripper_action
-
-            if self.gripper_action_repeat == self.sticky_gripper_num_repeat:
-                self.sticky_action_is_on = False
-                self.gripper_action_repeat = 0
-                self.sticky_gripper_action = 0.0
-
-            action["gripper"] = relative_gripper_action
+                current_gripper_action = raw_action["open_gripper"]
+                current_gripper_action = (current_gripper_action * 2) - 1
+                current_gripper_action = - current_gripper_action
+                action["gripper"] = current_gripper_action
 
         elif self.policy_setup == "widowx_bridge":
             action["gripper"] = 2.0 * (raw_action["open_gripper"] > 0.5) - 1.0

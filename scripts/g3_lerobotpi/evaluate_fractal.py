@@ -9,6 +9,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
     parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
     parser.add_argument("--action-ensemble", action="store_true", help="Use action ensemble if set.")
+    parser.add_argument("--sticky-action", action="store_true", help="Use sticky action if set.")
     return parser.parse_args()
 
 
@@ -21,6 +22,7 @@ if __name__ == "__main__":
         policy_setup="google_robot",
         action_scale=1.0,
         action_ensemble=args.action_ensemble,
+        sticky_action=args.sticky_action,
     )
 
     print("Policy initialized. Starting evaluation...")
