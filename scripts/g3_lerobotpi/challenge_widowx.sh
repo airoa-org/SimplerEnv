@@ -13,4 +13,6 @@ echo "Action ensemble: $action_ensemble"
 args=( --ckpt-path "$ckpt" )
 [[ "${action_ensemble,,}" =~ ^(true)$ ]] && args+=( --action-ensemble )
 
+args+=( --save-path-suffix "$(date +%Y%m%d_%H%M%S)" )
+
 python scripts/g3_lerobotpi/challenge_widowx.py "${args[@]}"

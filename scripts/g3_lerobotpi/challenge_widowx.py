@@ -18,6 +18,7 @@ def parse_args():
     parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
     parser.add_argument("--control-freq", type=int, default=5, help="Set control frequency (default->5)")
     parser.add_argument("--action-ensemble", action="store_true", help="Use action ensemble if set.")
+    parser.add_argument("--save-path-suffix", type=str, default="", help="Suffix to add to the save path.")
     return parser.parse_args()
 
 
@@ -47,7 +48,7 @@ if __name__ == "__main__":
 
         # Evaluate a task
         cur_scores = task(
-            env_policy=policy, ckpt_path=args.ckpt_path, control_freq=args.control_freq
+            env_policy=policy, ckpt_path=args.ckpt_path + f"_{args.save_path_suffix}", control_freq=args.control_freq
         )
         final_scores += cur_scores
 

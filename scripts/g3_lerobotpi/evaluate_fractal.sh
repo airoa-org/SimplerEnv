@@ -17,6 +17,8 @@ args=( --ckpt-path "$ckpt" )
 [[ "${action_ensemble,,}" =~ ^(true)$ ]] && args+=( --action-ensemble )
 [[ "${sticky_action,,}"  =~ ^(true)$ ]] && args+=( --sticky-action )
 
+args+=( --save-path-suffix "$(date +%Y%m%d_%H%M%S)" )
+
 
 if [ "$eval_method" == "comprehensive" ]; then
     args+=( --eval-task all )
