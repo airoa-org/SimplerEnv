@@ -1,6 +1,8 @@
 import random
 from typing import Any, Dict, List, Tuple
+import os
 
+import pickle
 import numpy as np
 
 from ..policies.base import AiroaBasePolicy
@@ -62,6 +64,7 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> 
         obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_visual_matching",
     )
 
     for urdf in urdf_versions:
@@ -103,6 +106,7 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
         obj_episode_range=[0, 4],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_variant_agg",
     )
 
     # base
@@ -234,6 +238,7 @@ def pick_object_variant_agg(
         obj_episode_range=[0, 4],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_variant_agg",
     )
 
     # 単一プール（どれが選ばれたか識別できるよう (kind, value) で保持）
@@ -301,6 +306,7 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
         obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_among_visual_matching",
     )
 
     for urdf in urdf_versions:
@@ -342,6 +348,7 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
         obj_episode_range=[0, 5],
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
+        task_name="fractal_pick_object_among_variant_agg",
     )
 
     # base
@@ -436,6 +443,7 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[
         obj_init_x_range=[0, 0, 1],
         obj_init_y_range=[0, 0, 1],
         scene_name="dummy_drawer",
+        task_name="fractal_drawer_visual_matching",
     )
 
     # 9 overlay poses (A0/A1/A2/B0/B1/B2/C0/C1/C2)
@@ -542,6 +550,7 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[List
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
         obj_init_x_range=[0, 0, 1],
         obj_init_y_range=[0, 0, 1],
+        task_name="fractal_drawer_variant_agg",
     )
 
     # base (enable raytracing)
@@ -590,6 +599,7 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List[L
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
+        task_name="fractal_move_near_variant_agg",
     )
 
     # base
@@ -650,6 +660,7 @@ def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         robot_init_rot_quat_center=[0, 0, 0, 1],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, -0.09, -0.09, 1],
         ckpt_path=ckpt_path,
+        task_name="fractal_move_near_visual_matching",
     )
 
     urdf_versions = [None, "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
@@ -686,6 +697,7 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -
         obj_init_y_range=[-0.02, 0.08, 3],
         obj_variation_mode="episode_xy",
         obj_episode_range=[0, 3],
+        task_name="fractal_put_in_drawer_visual_matching",
     )
 
     overlay_poses = [
@@ -750,6 +762,7 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         robot_init_x_range=[0.65, 0.65, 1],
         robot_init_y_range=[-0.2, 0.2, 3],
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0.0, 0.0, 1],
+        task_name="fractal_put_in_drawer_variant_agg",
     )
 
     env_names = ["PlaceIntoClosedTopDrawerCustomInScene-v0"]
@@ -760,16 +773,18 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # backgrounds (shader_dir=rt)
+    additional_env_kwargs = common.pop("additional_env_build_kwargs")
     for scene in ["modern_bedroom_no_roof", "modern_office_no_roof"]:
-        merged = common["additional_env_build_kwargs"].copy()
+        merged = additional_env_kwargs.copy()
         merged["shader_dir"] = "rt"
+        
         for env_name in env_names:
             cfg = ManiSkill2Config(**common, env_name=env_name, scene_name=scene, additional_env_build_kwargs=merged)
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # lightings
     for light_mode in ["brighter", "darker"]:
-        merged = common["additional_env_build_kwargs"].copy()
+        merged = additional_env_kwargs.copy()
         merged.update({"shader_dir": "rt", "light_mode": light_mode})
         for env_name in env_names:
             cfg = ManiSkill2Config(**common, env_name=env_name, scene_name="frl_apartment_stage_simple", additional_env_build_kwargs=merged)
@@ -777,7 +792,7 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
 
     # new cabinets
     for station in ["mk_station2", "mk_station3"]:
-        merged = common["additional_env_build_kwargs"].copy()
+        merged = additional_env_kwargs.copy()
         merged.update({"shader_dir": "rt", "station_name": station})
         for env_name in env_names:
             cfg = ManiSkill2Config(**common, env_name=env_name, scene_name="frl_apartment_stage_simple", additional_env_build_kwargs=merged)
@@ -803,20 +818,40 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
 
-    vm_results += pick_object_visual_matching(env_policy, ckpt_path)
-    sim_results += pick_object_variant_agg(env_policy, ckpt_path)
+    pick_object_vm_results = pick_object_visual_matching(env_policy, ckpt_path)
+    vm_results += pick_object_vm_results
+    print(f"Pick Object Visual Matching: {np.mean(pick_object_vm_results)} ({np.sum(pick_object_vm_results)} / {np.prod(np.shape(pick_object_vm_results))})")
+    pick_object_sim_results = pick_object_variant_agg(env_policy, ckpt_path)
+    sim_results += pick_object_sim_results
+    print(f"Pick Object Variant Agg: {np.mean(pick_object_sim_results)} ({np.sum(pick_object_sim_results)} / {np.prod(np.shape(pick_object_sim_results))})")
 
-    vm_results += pick_object_among_visual_matching(env_policy, ckpt_path)
-    sim_results += pick_object_among_variant_agg(env_policy, ckpt_path)
+    pick_object_among_vm_results = pick_object_among_visual_matching(env_policy, ckpt_path)
+    vm_results += pick_object_among_vm_results
+    print(f"Pick Object Among Visual Matching: {np.mean(pick_object_among_vm_results)} ({np.sum(pick_object_among_vm_results)} / {np.prod(np.shape(pick_object_among_vm_results))})")
+    pick_object_among_sim_results = pick_object_among_variant_agg(env_policy, ckpt_path)
+    sim_results += pick_object_among_sim_results
+    print(f"Pick Object Among Variant Agg: {np.mean(pick_object_among_sim_results)} ({np.sum(pick_object_among_sim_results)} / {np.prod(np.shape(pick_object_among_sim_results))})")
 
-    vm_results += drawer_visual_matching(env_policy, ckpt_path)
-    sim_results += drawer_variant_agg(env_policy, ckpt_path)
+    drawer_vm_results = drawer_visual_matching(env_policy, ckpt_path)
+    vm_results += drawer_vm_results
+    print(f"Drawer Visual Matching: {np.mean(drawer_vm_results)} ({np.sum(drawer_vm_results)} / {np.prod(np.shape(drawer_vm_results))})")
+    drawer_sim_results = drawer_variant_agg(env_policy, ckpt_path)
+    sim_results += drawer_sim_results
+    print(f"Drawer Variant Agg: {np.mean(drawer_sim_results)} ({np.sum(drawer_sim_results)} / {np.prod(np.shape(drawer_sim_results))})")
 
-    vm_results += move_near_visual_matching(env_policy, ckpt_path)
-    sim_results += move_near_variant_agg(env_policy, ckpt_path)
+    move_near_vm_results = move_near_visual_matching(env_policy, ckpt_path)
+    vm_results += move_near_vm_results
+    print(f"Move Near Visual Matching: {np.mean(move_near_vm_results)} ({np.sum(move_near_vm_results)} / {np.prod(np.shape(move_near_vm_results))})")
+    move_near_sim_results = move_near_variant_agg(env_policy, ckpt_path)
+    sim_results += move_near_sim_results
+    print(f"Move Near Variant Agg: {np.mean(move_near_sim_results)} ({np.sum(move_near_sim_results)} / {np.prod(np.shape(move_near_sim_results))})")
 
-    vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path)
-    sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path)
+    put_in_drawer_vm_results = put_in_drawer_visual_matching(env_policy, ckpt_path)
+    vm_results += put_in_drawer_vm_results
+    print(f"Put In Drawer Visual Matching: {np.mean(put_in_drawer_vm_results)} ({np.sum(put_in_drawer_vm_results)} / {np.prod(np.shape(put_in_drawer_vm_results))})")
+    put_in_drawer_sim_results = put_in_drawer_variant_agg(env_policy, ckpt_path)
+    sim_results += put_in_drawer_sim_results
+    print(f"Put In Drawer Variant Agg: {np.mean(put_in_drawer_sim_results)} ({np.sum(put_in_drawer_sim_results)} / {np.prod(np.shape(put_in_drawer_sim_results))})")
 
     # ロバストスコア
     sim_score = calculate_robust_score(sim_results)
@@ -841,3 +876,90 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
         "simulation_robust_score": sim_score,
         "visual_matching_robust_score": vm_score,
     }
+
+
+def run_partial_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, task: str) -> Dict[str, float]:
+    print("=" * 80)
+    print(f"🚀 STARTING PARTIAL EVALUATION 🚀")
+    print(f"Task: {task}")
+    print(f"Checkpoint: {ckpt_path}")
+    print(f"Weights: Sim={SIM_WEIGHT}, VisualMatching={VISUAL_MATCHING_WEIGHT}")
+    print("=" * 80)
+
+    ckpt_path_basename = ckpt_path if ckpt_path[-1] != "/" else ckpt_path[:-1]
+    ckpt_path_basename = ckpt_path_basename.split("/")[-1]
+    data_save_path = f"results/{ckpt_path_basename}/evaluation_results"
+    os.makedirs(data_save_path, exist_ok=True)
+
+    if not task == "calc_score":
+        # Evaluate specific task
+        if task == "pick_object":
+            vm_results = pick_object_visual_matching(env_policy, ckpt_path)
+            sim_results = pick_object_variant_agg(env_policy, ckpt_path)
+        elif task == "pick_object_among":
+            vm_results = pick_object_among_visual_matching(env_policy, ckpt_path)
+            sim_results = pick_object_among_variant_agg(env_policy, ckpt_path)
+        elif task == "drawer":
+            vm_results = drawer_visual_matching(env_policy, ckpt_path)
+            sim_results = drawer_variant_agg(env_policy, ckpt_path)
+        elif task == "move_near":
+            vm_results = move_near_visual_matching(env_policy, ckpt_path)
+            sim_results = move_near_variant_agg(env_policy, ckpt_path)
+        elif task == "put_in_drawer":
+            vm_results = put_in_drawer_visual_matching(env_policy, ckpt_path)
+            sim_results = put_in_drawer_variant_agg(env_policy, ckpt_path)
+        else:
+            raise ValueError(f"Unknown task: {task}")
+
+        # Save results
+        with open(f"{data_save_path}/{task}_vm.pkl", "wb") as f:
+            pickle.dump(vm_results, f)
+        
+        with open(f"{data_save_path}/{task}_sim.pkl", "wb") as f:
+            pickle.dump(sim_results, f)
+
+        # Log results
+        print("\n" + "=" * 80)
+        print(f"Task: {task} completed.")
+        print(f"Visual Matching: {np.mean(vm_results)} ({np.sum(vm_results)} / {np.prod(np.shape(vm_results))})")
+        print(f"Variant Agg: {np.mean(sim_results)} ({np.sum(sim_results)} / {np.prod(np.shape(sim_results))})")
+        print("\n" + "=" * 80)
+
+        return {}
+    else: # Calculate score from saved results
+
+        vm_results: List[List[bool]] = []
+        sim_results: List[List[bool]] = []
+
+        # Load results
+        tasks = ["pick_object", "pick_object_among", "drawer", "move_near", "put_in_drawer"]
+        for i in range(len(tasks)):
+
+            with open(f"{data_save_path}/{tasks[i]}_vm.pkl", "rb") as f:
+                vm_results += pickle.load(f)
+
+            with open(f"{data_save_path}/{tasks[i]}_sim.pkl", "rb") as f:
+                sim_results += pickle.load(f)
+
+        sim_score = calculate_robust_score(sim_results)
+        vm_score = calculate_robust_score(vm_results)
+
+        total_weight = SIM_WEIGHT + VISUAL_MATCHING_WEIGHT
+        final_score = 0.0 if total_weight == 0 else (sim_score * SIM_WEIGHT + vm_score * VISUAL_MATCHING_WEIGHT) / total_weight
+
+        print("\n" + "=" * 80)
+        print("📊 EVALUATION SUMMARY 📊")
+        print("-" * 80)
+        print(f"Simulation Score (Robust):            {sim_score:.4f}")
+        print(f"  - Total Simulation Runs: {len(sim_results)}")
+        print(f"Visual Matching Score (Robust):       {vm_score:.4f}")
+        print(f"  - Total Visual Matching Runs: {len(vm_results)}")
+        print("-" * 80)
+        print(f"🏆 Final Weighted Score:               {final_score:.4f}")
+        print("=" * 80)
+    
+        return {
+            "final_score": final_score,
+            "simulation_robust_score": sim_score,
+            "visual_matching_robust_score": vm_score,
+        }
