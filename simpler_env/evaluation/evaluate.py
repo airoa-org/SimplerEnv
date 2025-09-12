@@ -1,6 +1,8 @@
 import random
 from typing import Any, Dict, List, Tuple
+import os
 
+import pickle
 import numpy as np
 
 from ..policies.base import AiroaBasePolicy
@@ -872,3 +874,90 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
         "simulation_robust_score": sim_score,
         "visual_matching_robust_score": vm_score,
     }
+
+
+def run_partial_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, task: str) -> Dict[str, float]:
+    print("=" * 80)
+    print(f"🚀 STARTING PARTIAL EVALUATION 🚀")
+    print(f"Task: {task}")
+    print(f"Checkpoint: {ckpt_path}")
+    print(f"Weights: Sim={SIM_WEIGHT}, VisualMatching={VISUAL_MATCHING_WEIGHT}")
+    print("=" * 80)
+
+    ckpt_path_basename = ckpt_path if ckpt_path[-1] != "/" else ckpt_path[:-1]
+    ckpt_path_basename = ckpt_path_basename.split("/")[-1]
+    data_save_path = f"results/{ckpt_path_basename}/evaluation_results"
+    os.makedirs(data_save_path, exist_ok=True)
+
+    if not task == "calc_score":
+        # Evaluate specific task
+        if task == "pick_object":
+            vm_results = pick_object_visual_matching(env_policy, ckpt_path)
+            sim_results = pick_object_variant_agg(env_policy, ckpt_path)
+        elif task == "pick_object_among":
+            vm_results = pick_object_among_visual_matching(env_policy, ckpt_path)
+            sim_results = pick_object_among_variant_agg(env_policy, ckpt_path)
+        elif task == "drawer":
+            vm_results = drawer_visual_matching(env_policy, ckpt_path)
+            sim_results = drawer_variant_agg(env_policy, ckpt_path)
+        elif task == "move_near":
+            vm_results = move_near_visual_matching(env_policy, ckpt_path)
+            sim_results = move_near_variant_agg(env_policy, ckpt_path)
+        elif task == "put_in_drawer":
+            vm_results = put_in_drawer_visual_matching(env_policy, ckpt_path)
+            sim_results = put_in_drawer_variant_agg(env_policy, ckpt_path)
+        else:
+            raise ValueError(f"Unknown task: {task}")
+
+        # Save results
+        with open(f"{data_save_path}/{task}_vm.pkl", "wb") as f:
+            pickle.dump(vm_results, f)
+        
+        with open(f"{data_save_path}/{task}_sim.pkl", "wb") as f:
+            pickle.dump(sim_results, f)
+
+        # Log results
+        print("\n" + "=" * 80)
+        print(f"Task: {task} completed.")
+        print(f"Visual Matching: {np.mean(vm_results)} ({np.sum(vm_results)} / {np.prod(np.shape(vm_results))})")
+        print(f"Variant Agg: {np.mean(sim_results)} ({np.sum(sim_results)} / {np.prod(np.shape(sim_results))})")
+        print("\n" + "=" * 80)
+
+        return {}
+    else: # Calculate score from saved results
+
+        vm_results: List[List[bool]] = []
+        sim_results: List[List[bool]] = []
+
+        # Load results
+        tasks = ["pick_object", "pick_object_among", "drawer", "move_near", "put_in_drawer"]
+        for i in range(len(tasks)):
+
+            with open(f"{data_save_path}/{tasks[i]}_vm.pkl", "rb") as f:
+                vm_results += pickle.load(f)
+
+            with open(f"{data_save_path}/{tasks[i]}_sim.pkl", "rb") as f:
+                sim_results += pickle.load(f)
+
+        sim_score = calculate_robust_score(sim_results)
+        vm_score = calculate_robust_score(vm_results)
+
+        total_weight = SIM_WEIGHT + VISUAL_MATCHING_WEIGHT
+        final_score = 0.0 if total_weight == 0 else (sim_score * SIM_WEIGHT + vm_score * VISUAL_MATCHING_WEIGHT) / total_weight
+
+        print("\n" + "=" * 80)
+        print("📊 EVALUATION SUMMARY 📊")
+        print("-" * 80)
+        print(f"Simulation Score (Robust):            {sim_score:.4f}")
+        print(f"  - Total Simulation Runs: {len(sim_results)}")
+        print(f"Visual Matching Score (Robust):       {vm_score:.4f}")
+        print(f"  - Total Visual Matching Runs: {len(vm_results)}")
+        print("-" * 80)
+        print(f"🏆 Final Weighted Score:               {final_score:.4f}")
+        print("=" * 80)
+    
+        return {
+            "final_score": final_score,
+            "simulation_robust_score": sim_score,
+            "visual_matching_robust_score": vm_score,
+        }
