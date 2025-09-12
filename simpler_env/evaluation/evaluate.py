@@ -773,16 +773,18 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
         results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # backgrounds (shader_dir=rt)
+    additional_env_kwargs = common.pop("additional_env_build_kwargs")
     for scene in ["modern_bedroom_no_roof", "modern_office_no_roof"]:
-        merged = common["additional_env_build_kwargs"].copy()
+        merged = additional_env_kwargs.copy()
         merged["shader_dir"] = "rt"
+        
         for env_name in env_names:
             cfg = ManiSkill2Config(**common, env_name=env_name, scene_name=scene, additional_env_build_kwargs=merged)
             results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
 
     # lightings
     for light_mode in ["brighter", "darker"]:
-        merged = common["additional_env_build_kwargs"].copy()
+        merged = additional_env_kwargs.copy()
         merged.update({"shader_dir": "rt", "light_mode": light_mode})
         for env_name in env_names:
             cfg = ManiSkill2Config(**common, env_name=env_name, scene_name="frl_apartment_stage_simple", additional_env_build_kwargs=merged)
@@ -790,7 +792,7 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> Li
 
     # new cabinets
     for station in ["mk_station2", "mk_station3"]:
-        merged = common["additional_env_build_kwargs"].copy()
+        merged = additional_env_kwargs.copy()
         merged.update({"shader_dir": "rt", "station_name": station})
         for env_name in env_names:
             cfg = ManiSkill2Config(**common, env_name=env_name, scene_name="frl_apartment_stage_simple", additional_env_build_kwargs=merged)
