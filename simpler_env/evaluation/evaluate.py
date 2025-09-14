@@ -817,7 +817,8 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
 
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
-
+    
+    # TODO: Re-factorize the statistics of tasks to eliminate redundant codes.
     pick_object_vm_results = pick_object_visual_matching(env_policy, ckpt_path)
     vm_results += pick_object_vm_results
     print(f"Pick Object Visual Matching: {np.mean(pick_object_vm_results)} ({np.sum(pick_object_vm_results)} / {np.prod(np.shape(pick_object_vm_results))})")
