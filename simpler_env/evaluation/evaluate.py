@@ -817,7 +817,8 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
 
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
-
+    
+    # TODO: Re-factorize the statistics of tasks to eliminate redundant codes.
     pick_object_vm_results = pick_object_visual_matching(env_policy, ckpt_path)
     vm_results += pick_object_vm_results
     print(f"Pick Object Visual Matching: {np.mean(pick_object_vm_results)} ({np.sum(pick_object_vm_results)} / {np.prod(np.shape(pick_object_vm_results))})")
@@ -887,7 +888,7 @@ def run_partial_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, task: st
     print("=" * 80)
 
     ckpt_path_basename = ckpt_path if ckpt_path[-1] != "/" else ckpt_path[:-1]
-    ckpt_path_basename = ckpt_path_basename.split("/")[-1]
+    ckpt_path_basename = os.path.basename(ckpt_path_basename)
     data_save_path = f"results/{ckpt_path_basename}/evaluation_results"
     os.makedirs(data_save_path, exist_ok=True)
 
