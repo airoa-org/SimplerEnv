@@ -17,6 +17,8 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    # TODO: Combine w/ fractal_tasks.py to make this module more robot-independent.
+    
     args = parse_args()
     ckpt_path = args.ckpt_path
 
