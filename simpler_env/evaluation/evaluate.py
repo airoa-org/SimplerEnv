@@ -888,7 +888,7 @@ def run_partial_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, task: st
     print("=" * 80)
 
     ckpt_path_basename = ckpt_path if ckpt_path[-1] != "/" else ckpt_path[:-1]
-    ckpt_path_basename = ckpt_path_basename.split("/")[-1]
+    ckpt_path_basename = os.path.basename(ckpt_path_basename)
     data_save_path = f"results/{ckpt_path_basename}/evaluation_results"
     os.makedirs(data_save_path, exist_ok=True)
 
