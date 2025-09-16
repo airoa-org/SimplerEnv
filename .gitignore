@@ -30,3 +30,6 @@ dist/
 .vscode
 
 imgui.ini
+
+uv.lock
+weights/
