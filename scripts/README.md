@@ -3,18 +3,18 @@
 ### Google Robot
 **タスクセッティング**
 
-| Task                                | Challenge | Task Definition                                     | Randomizer Pool                                                                    |
-| ----------------------------------- | --------- | --------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `pick_object_visual_matching`       | 1         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<robot_color>`,`<camera_position>` |
-| `pick_object_variant_agg`           | 1         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<background/cabinet>`              |
-| `pick_object_among_visual_matching` | 2         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<robot_color>`,`<camera_position>` |
-| `pick_object_among_variant_agg`     | 2         | pick `<object>`                                     | `<object>`,`<position>`,`<object_orientation>`,`<background/cabinet>`              |
-| `drawer_visual_matching`            | 3         | open/close `<position>` drawer                      | `<position>`,`<robot_color>`,`<background-robot_init_pos>`                         |
-| `drawer_variant_agg`                | 3         | open/close `<position>` drawer                      | `<position>`,`<lighting>`,`<background>`,`<cabinet>`                               |
-| `move_near_visual_matching`         | 4         | move `<object>` near `<object>`                     | `<object>`,`<position>`,`<robot_position>`,`<robot_color>`                         |
-| `move_near_variant_agg`             | 4         | move `<object>` near `<object>`                     | `<object>`,`<position>`,`<lighting>`,`<background/cabinet>`,`<camera_position>`    |
-| `put_in_drawer_visual_matching`     | 5         | open top drawer -> place `<object>` into top drawer | `<object>`,`<robot_color>`,`<background-robot_init_pos>`                           |
-| `put_in_drawer_variant_agg`         | 5         | open top drawer -> place `<object>` into top drawer | `<object>`,`<lighting>`,`<robot_position>`,`<background>`,`<cabinet>`              |
+| Task  | Challenge | Task Definition                                     | Task                                | Randomizer Pool                                                                    |
+| ----- | --------- | --------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------- |
+| 1-1   | 1         | pick `<object>`                                     | `pick_object_visual_matching`       | `<object>`,`<position>`,`<object_orientation>`,`<robot_color>`,`<camera_position>` |
+| 1-2   | 1         | pick `<object>`                                     | `pick_object_variant_agg`           | `<object>`,`<position>`,`<object_orientation>`,`<background/cabinet>`              |
+| 2-1   | 1         | pick `<object>`                                     | `pick_object_among_visual_matching` | `<object>`,`<position>`,`<object_orientation>`,`<robot_color>`,`<camera_position>` |
+| 2-2   | 1         | pick `<object>`                                     | `pick_object_among_variant_agg`     | `<object>`,`<position>`,`<object_orientation>`,`<background/cabinet>`              |
+| 3-1   | 1         | open/close `<position>` drawer                      | `drawer_visual_matching`            | `<position>`,`<robot_color>`,`<background-robot_init_pos>`                         |
+| 3-2   | 1         | open/close `<position>` drawer                      | `drawer_variant_agg`                | `<position>`,`<lighting>`,`<background>`,`<cabinet>`                               |
+| 4-1   | 2         | move `<object>` near `<object>`                     | `move_near_visual_matching`         | `<object>`,`<position>`,`<robot_position>`,`<robot_color>`                         |
+| 4-2   | 2         | move `<object>` near `<object>`                     | `move_near_variant_agg`             | `<object>`,`<position>`,`<lighting>`,`<background/cabinet>`,`<camera_position>`    |
+| 5-1   | 2         | open top drawer -> place `<object>` into top drawer | `put_in_drawer_visual_matching`     | `<object>`,`<robot_color>`,`<background-robot_init_pos>`                           |
+| 5-2   | 2         | open top drawer -> place `<object>` into top drawer | `put_in_drawer_variant_agg`         | `<object>`,`<lighting>`,`<robot_position>`,`<background>`,`<cabinet>`              |
 
 
 ### WidowX
@@ -75,6 +75,12 @@ uv pip install tensorflow==2.15.0
 uv pip install -r requirements_full_install.txt
 uv pip install -e .
 uv pip install tensorflow[and-cuda]==2.15.1
+
+# If you encounter an import error.
+# ImportError: This version of TensorFlow Probability requires TensorFlow version >= 2.16; Detected an installation of version 2.15.1. Please upgrade TensorFlow to proceed.
+# Do the following.
+uv pip uninstall tensorflow-probability
+uv pip install "tensorflow-probability==0.22.1" --no-deps
 
 
 # Make a checkpoint dir:
