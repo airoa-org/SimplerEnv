@@ -1,7 +1,18 @@
 ## Introduction
 
-### Google Robot
-**タスクセッティング**
+# When submitting your pull request
+
+1. Make sure the following 2 scripts runs properly without errors till the end.
+
+```
+# Google Robot Evaluation Script
+CUDA_VISIBLE_DEVICES=<GPU_DEVICE_ID> python scripts/rt1/evaluate_fractal.py --ckpt-path /path/to/ckpt
+
+# WidowX Evaluation Script
+CUDA_VISIBLE_DEVICES=<GPU_DEVICE_ID> python scripts/openpi/challenge_widowx.py --ckpt /path/to/ckpt --control-freq 5
+```
+
+### Google Robot Evaluation Task List
 
 | Task  | Challenge | Task Definition                                     | Task                                | Randomizer Pool                                                                    |
 | ----- | --------- | --------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------- |
@@ -17,8 +28,7 @@
 | 5-2   | 2         | open top drawer -> place `<object>` into top drawer | `put_in_drawer_variant_agg`         | `<object>`,`<lighting>`,`<robot_position>`,`<background>`,`<cabinet>`              |
 
 
-### WidowX
-**タスクセッティング**
+### WidowX Evaluation Task List
 
 | Task | Challenge | Task Definition               |
 | ---- | --------- | ----------------------------- |
@@ -108,7 +118,7 @@ mv rt_1_tf_trained_for_000001120 checkpoints
 実行
 ```bash
 # fractal
-CUDA_VISIBLE_DEVICES=3 python scripts/rt1/evaluate_fractal.py --ckpt-path checkpoints/rt_1_tf_trained_for_000400120
+CUDA_VISIBLE_DEVICES=1 python scripts/rt1/evaluate_fractal.py --ckpt-path checkpoints/rt_1_tf_trained_for_000400120
 ```
 
 #### OpenPi
@@ -133,7 +143,6 @@ huggingface-cli download --resume-download --repo-type model HaomingSong/openpi0
 ```
 
 実行
-
 1. OpenPiの場合モデルを起動
 ```bash
 # current directory: /app/SimplerEnV
@@ -145,8 +154,7 @@ uv run scripts/serve_policy.py $SERVER_ARGS
 2. 実行
 ```bash
 # current directory: /app/SimplerEnV
-# widowx challenge
-python scripts/openpi/challenge_widowx.py --ckpt /path/to/ckpt --control-freq 5
+CUDA_VISIBLE_DEVICES=1 python scripts/openpi/challenge_widowx.py --ckpt /path/to/ckpt --control-freq 5
 ```
 
 #### lerobot-pi0
@@ -154,15 +162,16 @@ python scripts/openpi/challenge_widowx.py --ckpt /path/to/ckpt --control-freq 5
 インストール
 ```bash
 uv venv -p 3.10 scripts/lerobotpi/.venv
-
-
-# uv pip install -e .
 source $(pwd)/scripts/lerobotpi/.venv/bin/activate
+
 uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 uv pip install git+https://github.com/huggingface/lerobot.git@ce2b9724bfe1b5a4c45e61b1890eef3f5ab0909c#egg=lerobot[pi0]
 uv pip install -e . ".[torch]"
 uv pip install pytest
+```
 
+実行
+```bash
 huggingface-cli login
 CUDA_VISIBLE_DEVICES=1 python scripts/lerobotpi/evaluate_fractal.py --ckpt-path HaomingSong/lerobot-pi0-fractal
 CUDA_VISIBLE_DEVICES=1 python scripts/lerobotpi/evaluate_fractal.py --ckpt-path lerobot/pi0
