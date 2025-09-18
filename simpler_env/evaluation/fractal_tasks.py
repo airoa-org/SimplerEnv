@@ -677,7 +677,7 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
 
     vm_results: List[List[bool]] = []
     sim_results: List[List[bool]] = []
-    num_trials = 3
+    num_trials = 30
 
     vm_results += pick_object_visual_matching(env_policy, ckpt_path, num_trials)
     sim_results += pick_object_variant_agg(env_policy, ckpt_path, num_trials)
