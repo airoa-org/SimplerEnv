@@ -18,23 +18,34 @@ def parse_args():
     )
     return parser.parse_args()
 
-# scoring_config is now a nested mapping: {policy_name -> ordered subtask weights}.
+# You can modify the following to customize your scoring config 
 # 1) The "rubrics_score" dict MUST preserve order (use OrderedDict or rely on Python 3.7+ insertion order).
 # 2) Weights MUST sum to 1.0.
+widowx_rubrics_score = OrderedDict([
+    ("is_src_obj_grasped", 0.3),
+    ("consecutive_grasp", 0.3),
+    ("src_on_target", 0.4),
+])
+google_robot_move_near_rubrics_score = OrderedDict([
+    ("moved_correct_obj", 0.3),
+    ("near_tgt_obj", 0.3),
+    ("is_closest_to_tg", 0.4),
+])
+google_robot_put_in_rubrics_score = OrderedDict([
+    ("is_drawer_open", 1.0),
+])
 SCORING_CONFIG = {
     "widowx": {
-        "challenge2_task_names": [
-            "widowx_task2_stack_cube",
-            "widowx_task3_put_object_on_top",
-            "widowx_task4_put_object_in_basket",
-        ],
-        "rubrics_score": OrderedDict([
-            ("is_src_obj_grasped", 0.3),
-            ("consecutive_grasp", 0.3),
-            ("src_on_target", 0.4),
-        ]),
+        "widowx_task2_stack_cube": widowx_rubrics_score,
+        "widowx_task3_put_object_on_top": widowx_rubrics_score,
+        "widowx_task4_put_object_in_basket": widowx_rubrics_score,
     },
-    # TODO: Define google_robot-specific score config.
+    "google_robot": {
+        "fractal_move_near_visual_matching": google_robot_move_near_rubrics_score,
+        "fractal_move_near_variant_agg": google_robot_move_near_rubrics_score,
+        "fractal_put_in_drawer_visual_matching": google_robot_put_in_rubrics_score,
+        "fractal_put_in_drawer_variant_agg": google_robot_put_in_rubrics_score,
+    }
 }
 
 def ensure_weights_sum_to_one(weights: OrderedDict):
@@ -59,7 +70,8 @@ def main():
 
     policy = pick_policy(args.policy_setup)
     scoring_config = SCORING_CONFIG[policy]
-    ensure_weights_sum_to_one(scoring_config["rubrics_score"])
+    for rubrics_score in scoring_config.values():
+        ensure_weights_sum_to_one(rubrics_score)
 
     # Load json file
     try:
@@ -73,7 +85,7 @@ def main():
     score_list = []
     for task in data:
         task_name = task.get("task_name", "")
-        if task_name not in scoring_config["challenge2_task_names"]:
+        if task_name not in scoring_config.keys():
             continue
         trials = task.get("episodes", [])
         for trial in trials:
@@ -82,11 +94,12 @@ def main():
             score = 0.0
 
             # Accumulate scores
-            for subtask in scoring_config["rubrics_score"].keys():
+            rubrics_score = scoring_config[task_name]
+            for subtask in rubrics_score.keys():
                 status = episode_stats.get(subtask, {}).get("status", False)
                 if not status:
                     break
-                score += scoring_config["rubrics_score"][subtask]
+                score += rubrics_score[subtask]
 
             cur_score_data = {
                 "task_name": task_name,
