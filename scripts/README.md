@@ -9,6 +9,7 @@
 Google Robot Evaluation Script
 ```
 CUDA_VISIBLE_DEVICES=<GPU_DEVICE_ID> python scripts/rt1/evaluate_fractal.py --ckpt-path /path/to/ckpt
+```
 
 WidowX Evaluation Script
 ```
