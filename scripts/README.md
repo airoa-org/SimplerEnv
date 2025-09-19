@@ -1,15 +1,18 @@
 ## Introduction
 
-# When submitting your pull request
+# SimplerEnvのMRを提出する際の注意事項
 
-1. Make sure the following 2 scripts runs properly without errors till the end.
+- MRを提出する際に、WASABIにアップされているモデル重みのパスを記載してください。
+- 運営側でも並行してコード修正やバグ対応を進めております。そのため、MR提出日の時点で、各チームの提出ブランチに改めて `benchmark-v2` ブランチをマージしていただき、**Merge Conflictがない状態**にしていただけますよう、ご協力をお願いいたします。
+- また、以下の評価スクリプトについては、各チームのモデルと統合した上で、**最後まで正常に実行できること**をご確認ください。
 
+Google Robot Evaluation Script
 ```
-# Google Robot Evaluation Script
 CUDA_VISIBLE_DEVICES=<GPU_DEVICE_ID> python scripts/rt1/evaluate_fractal.py --ckpt-path /path/to/ckpt
 
-# WidowX Evaluation Script
-CUDA_VISIBLE_DEVICES=<GPU_DEVICE_ID> python scripts/openpi/challenge_widowx.py --ckpt /path/to/ckpt --control-freq 5
+WidowX Evaluation Script
+```
+CUDA_VISIBLE_DEVICES=<GPU_DEVICE_ID> python scripts/openpi/challenge_widowx.py --ckpt /path/to/ckpt 
 ```
 
 ### Google Robot Evaluation Task List
