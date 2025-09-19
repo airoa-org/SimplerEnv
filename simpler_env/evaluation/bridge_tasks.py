@@ -7,6 +7,8 @@ from .evaluate import _run_single_evaluation
 
 
 def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 5) -> List[List[bool]]:
+    max_time = 24
+    max_episode_steps = max_time * control_freq
 
     results: List[List[bool]] = []
 
@@ -15,7 +17,7 @@ def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str, contro
         robot="widowx",
         control_freq=control_freq,
         sim_freq=500,
-        max_episode_steps=120,
+        max_episode_steps=max_episode_steps,
         env_name="GraspRandomObjectInScene-v0",
         scene_name="bridge_table_1_v1",
         rgb_overlay_path="ManiSkill2_real2sim/data/real_inpainting/bridge_real_eval_1.png",
@@ -34,6 +36,8 @@ def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str, contro
 
 
 def widowx_task2_stack_cube(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 5) -> List[List[bool]]:
+    max_time = 24
+    max_episode_steps = max_time * control_freq
 
     results: List[List[bool]] = []
 
@@ -42,7 +46,7 @@ def widowx_task2_stack_cube(env_policy: AiroaBasePolicy, ckpt_path: str, control
         robot="widowx",
         control_freq=control_freq,
         sim_freq=500,
-        max_episode_steps=120,
+        max_episode_steps=max_episode_steps,
         env_name="StackRandomGreenYellowCubeInScene-v0",
         scene_name="bridge_table_1_v1",
         rgb_overlay_path="ManiSkill2_real2sim/data/real_inpainting/bridge_real_eval_1.png",
@@ -61,6 +65,8 @@ def widowx_task2_stack_cube(env_policy: AiroaBasePolicy, ckpt_path: str, control
 
 
 def widowx_task3_put_object_on_top(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 5) -> List[List[bool]]:
+    max_time = 24
+    max_episode_steps = max_time * control_freq
 
     results: List[List[bool]] = []
 
@@ -69,7 +75,7 @@ def widowx_task3_put_object_on_top(env_policy: AiroaBasePolicy, ckpt_path: str, 
         robot="widowx",
         control_freq=control_freq,
         sim_freq=500,
-        max_episode_steps=120,
+        max_episode_steps=max_episode_steps,
         env_name="PutRandomObjectOnRandomTopInScene-v0",
         scene_name="bridge_table_1_v1",
         rgb_overlay_path="ManiSkill2_real2sim/data/real_inpainting/bridge_real_eval_1.png",
@@ -88,6 +94,8 @@ def widowx_task3_put_object_on_top(env_policy: AiroaBasePolicy, ckpt_path: str, 
 
 
 def widowx_task4_put_object_in_basket(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 5) -> List[List[bool]]:
+    max_time = 48
+    max_episode_steps = max_time * control_freq
 
     results: List[List[bool]] = []
 
@@ -96,7 +104,7 @@ def widowx_task4_put_object_in_basket(env_policy: AiroaBasePolicy, ckpt_path: st
         robot="widowx_sink_camera_setup",
         control_freq=control_freq,
         sim_freq=500,
-        max_episode_steps=240,
+        max_episode_steps=max_episode_steps,
         env_name="PutRandomObjectInBasketScene-v0",
         scene_name="bridge_table_1_v2",
         rgb_overlay_path="ManiSkill2_real2sim/data/real_inpainting/bridge_sink.png",
