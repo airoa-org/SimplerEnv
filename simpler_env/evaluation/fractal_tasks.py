@@ -2,22 +2,37 @@ import random
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
+from statsmodels.stats.proportion import proportion_confint
 
 from ..policies.base import AiroaBasePolicy
 from .config import ManiSkill2Config
 from .maniskill2_evaluator import maniskill2_evaluator
 
 
-def calculate_robust_score(results: List[List[bool]], penalty_factor: float = 0.5) -> float:
+def calculate_score(results: List[bool], penalty_factor: float = 0.5) -> Tuple[float, float, float]:
+    """
+    Args:
+        results: 各エピソードの成功(True)/失敗(False)の一次元リスト
+        penalty_factor: 予備パラメータ（現状未使用）
+
+    Returns:
+        (successes_rate, wilson_lower_bound_95, sample_std_dev)
+    """
     if not results:
-        return 0.0
-    success_rates = [np.mean(run) for run in results if run]
-    if not success_rates:
-        return 0.0
-    mean_success_rate = np.mean(success_rates)
-    std_dev = np.std(success_rates)
-    robust_score = mean_success_rate - penalty_factor * std_dev
-    return max(0.0, robust_score)
+        return 0.0, 0.0, 0.0
+
+    n = len(results)
+    successes = int(np.sum(results))  # True を 1 として加算
+    successes_rate = successes / n
+
+    # Wilsonの二側95%CIの下限
+    wilson_lower, _ = proportion_confint(successes, n, alpha=0.05, method="wilson")
+    wilson_lower = float(wilson_lower)
+
+    # 0/1系列の標本標準偏差（エピソード間のばらつき）
+    std_dev = float(np.std(results, ddof=1)) if n > 1 else 0.0
+
+    return float(successes_rate), wilson_lower, std_dev
 
 
 def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
@@ -675,124 +690,63 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     random.seed(42)
     np.random.seed(42)
 
-    vm_results: List[List[bool]] = []
-    sim_results: List[List[bool]] = []
-    num_trials = 30
+    num_trials = 10
+    # vm_results: List[List[bool]] = []
+    # sim_results: List[List[bool]] = []
 
-    vm_results += pick_object_visual_matching(env_policy, ckpt_path, num_trials)
-    sim_results += pick_object_variant_agg(env_policy, ckpt_path, num_trials)
+    # vm_results += pick_object_visual_matching(env_policy, ckpt_path, num_trials)
+    # sim_results += pick_object_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += pick_object_among_visual_matching(env_policy, ckpt_path, num_trials)
-    sim_results += pick_object_among_variant_agg(env_policy, ckpt_path, num_trials)
+    # vm_results += pick_object_among_visual_matching(env_policy, ckpt_path, num_trials)
+    # sim_results += pick_object_among_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += drawer_visual_matching(env_policy, ckpt_path, num_trials)
-    sim_results += drawer_variant_agg(env_policy, ckpt_path, num_trials)
+    # vm_results += drawer_visual_matching(env_policy, ckpt_path, num_trials)
+    # sim_results += drawer_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += move_near_visual_matching(env_policy, ckpt_path, num_trials)
-    sim_results += move_near_variant_agg(env_policy, ckpt_path, num_trials)
+    # vm_results += move_near_visual_matching(env_policy, ckpt_path, num_trials)
+    # sim_results += move_near_variant_agg(env_policy, ckpt_path, num_trials)
 
-    vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path, num_trials)
-    sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path, num_trials)
+    # vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path, num_trials)
+    # sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path, num_trials)
 
-    # ロバストスコア
-    sim_score = calculate_robust_score(sim_results)
-    vm_score = calculate_robust_score(vm_results)
+    results = pick_object_visual_matching(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(
+        f"Pick Object Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
+    )
+    results = pick_object_variant_agg(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(f"Pick Object Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}")
 
-    total_weight = SIM_WEIGHT + VISUAL_MATCHING_WEIGHT
-    final_score = 0.0 if total_weight == 0 else (sim_score * SIM_WEIGHT + vm_score * VISUAL_MATCHING_WEIGHT) / total_weight
+    results = pick_object_among_visual_matching(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(
+        f"Pick Object Among Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
+    )
+    results = pick_object_among_variant_agg(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(
+        f"Pick Object Among Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
+    )
+    results = drawer_visual_matching(env_policy, ckpt_path, num_trials)
 
-    print("\n" + "=" * 80)
-    print("📊 EVALUATION SUMMARY 📊")
-    print("-" * 80)
-    print(f"Simulation Score (Robust):            {sim_score:.4f}")
-    print(f"  - Total Simulation Runs: {len(sim_results)}")
-    print(f"Visual Matching Score (Robust):       {vm_score:.4f}")
-    print(f"  - Total Visual Matching Runs: {len(vm_results)}")
-    print("-" * 80)
-    print(f"🏆 Final Weighted Score:               {final_score:.4f}")
-    print("=" * 80)
+    results = drawer_variant_agg(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(f"Drawer Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}")
+    results = move_near_visual_matching(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(
+        f"Move Near Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
+    )
+    results = move_near_variant_agg(env_policy, ckpt_path, num_trials)
 
-    return {
-        "final_score": final_score,
-        "simulation_robust_score": sim_score,
-        "visual_matching_robust_score": vm_score,
-    }
-
-
-# def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
-#     print("\n--- pick_object_variant_agg (single-pool, one-pick-per-trial) ---")
-
-#     results: List[List[bool]] = []
-
-#     scenes = [
-#         "google_pick_coke_can_1_v4",
-#         "google_pick_coke_can_1_v4_alt_background",
-#         "google_pick_coke_can_1_v4_alt_background_2",
-#         "Baked_sc1_staging_objaverse_cabinet1_h870",
-#         "Baked_sc1_staging_objaverse_cabinet2_h870",
-#     ]
-#     envs = [
-#         "GraspSingleRandomObjectInScene-v0",
-#         "GraspSingleRandomObjectAltGoogleCameraInScene-v0",
-#         "GraspSingleRandomObjectAltGoogleCamera2InScene-v0",
-#     ]
-#     object_orientation = [
-#         {"lr_switch": True},
-#         {"upright": True},
-#         {"laid_vertically": True},
-#     ]
-#     lightings = [None, "darker", "brighter"]
-
-#     base_kwargs: Dict[str, Any] = dict(
-#         robot="google_robot_static",
-#         policy_setup="google_robot",
-#         control_freq=3,
-#         sim_freq=513,
-#         max_episode_steps=160,
-#         ckpt_path=ckpt_path,
-#         robot_init_x_range=[0.35, 0.35, 1],
-#         robot_init_y_range=[0.20, 0.20, 1],
-#         obj_init_x_range=[-0.35, -0.12, 5],
-#         obj_init_y_range=[-0.02, 0.42, 5],
-#         obj_variation_mode="episode_xy",
-#         obj_episode_range=[0, 4],
-#         robot_init_rot_quat_center=[0, 0, 0, 1],
-#         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
-#     )
-
-#     # 単一プール（どれが選ばれたか識別できるよう (kind, value) で保持）
-#     pool = (
-#         [("scene", s) for s in scenes]
-#         + [("env", e) for e in envs]
-#         + [("orientation", o) for o in object_orientation]
-#         + [("lighting", l) for l in lightings]
-#     )
-
-#     # 現在の設定（初期値）
-#     current = {
-#         "scene": scenes[0],
-#         "env": envs[0],
-#         "orientation": object_orientation[0],
-#         "lighting": None,
-#     }
-
-#     for _ in range(num_trials):
-#         kind, value = random.choice(pool)  # ← 毎回1つだけ選ぶ
-#         current[kind] = value  # 選ばれた種類だけ更新
-
-#         # additional_env_build_kwargs を構築
-#         add_kwargs = dict(current["orientation"])
-#         if current["lighting"] == "darker":
-#             add_kwargs["slightly_darker_lighting"] = True
-#         elif current["lighting"] == "brighter":
-#             add_kwargs["slightly_brighter_lighting"] = True
-
-#         cfg = ManiSkill2Config(
-#             **base_kwargs,
-#             env_name=current["env"],
-#             scene_name=current["scene"],
-#             additional_env_build_kwargs=add_kwargs,
-#         )
-#         results.append(maniskill2_evaluator(env_policy, cfg))
-
-#     return results
+    results = put_in_drawer_visual_matching(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(
+        f"Put In Drawer Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
+    )
+    results = put_in_drawer_variant_agg(env_policy, ckpt_path, num_trials)
+    success_rate, wilson_score, standard_deviation = calculate_score(results)
+    print(
+        f"Put In Drawer Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
+    )
