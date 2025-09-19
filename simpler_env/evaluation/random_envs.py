@@ -52,7 +52,7 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
         self._placeholder_src = "__random_src_placeholder__"
         self._user_src_pool = candidate_source_names
 
-        self._grasp_hold_steps = int(grasp_hold_seconds * 5)  # fps = 5
+        self.grasp_hold_seconds = grasp_hold_seconds
         self.consecutive_grasp = 0
 
         super().__init__(
@@ -73,6 +73,8 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
             options = dict()
         options = options.copy()
         self.set_episode_rng(seed)
+
+        self._grasp_hold_steps = int(self.grasp_hold_seconds * self.control_freq)
 
         if self._user_src_pool is not None:
             src_candidates = list(self._user_src_pool)
