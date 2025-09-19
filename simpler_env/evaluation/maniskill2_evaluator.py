@@ -16,6 +16,7 @@ from simpler_env.utils.visualization import write_interval_video, write_video
 INF_COST = 999
 master_seed = 42
 rng = np.random.RandomState(master_seed)
+success_threshold_s = 3  # [s]
 
 def run_maniskill2_eval_single_episode(
     model,
@@ -121,6 +122,7 @@ def run_maniskill2_eval_single_episode(
     timestep = 0
     success = "failure"
     final_cost_time = INF_COST
+    success_timestep = 0
     # action_ensemble = model.action_ensemble_temp  if hasattr(model, "action_ensemble") else "none"
 
     # Step the environment
@@ -148,6 +150,11 @@ def run_maniskill2_eval_single_episode(
                 subtasks[k]["cost_time"] = min(subtasks[k]["cost_time"], timestep) if v else INF_COST
 
             final_cost_time = min(final_cost_time, timestep) if info["success"] else INF_COST
+            success_timestep = success_timestep + 1 if info["success"] else 0
+
+            if success_timestep >= success_threshold_s * control_freq:
+                print("Succeeded in advance")
+                break
 
             success = "success" if done else "failure"
             new_task_description = env.get_language_instruction()
@@ -194,7 +201,7 @@ def run_maniskill2_eval_single_episode(
     else:
         success_emoji = "❌"
     video_path = os.path.join(logging_dir, f"{episode_id}_{success}.mp4")
-    write_video(video_path, images, fps=5)
+    write_video(video_path, images, fps=control_freq)
     print(f"{success_emoji} Video saved to {video_path}")
 
     # save action trajectory
