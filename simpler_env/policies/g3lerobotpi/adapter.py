@@ -97,6 +97,8 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
         action_scale: float = 1.0,
         action_ensemble: bool = True,
         action_ensemble_temp: float = -0.8,
+        sticky_action: bool = False,
+        add_taks_prefix: bool = False
     ) -> None:
         super().__init__(policy)
         self.sticky_gripper_num_repeat = 10 # same to lerobotpi0
@@ -115,6 +117,8 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
         self.image_history = deque(maxlen=self.obs_horizon)
         self.exec_horizon = exec_horizon
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.sticky_action = sticky_action
+        self.add_taks_prefix = add_taks_prefix
 
         if self.policy_setup == "widowx_bridge":
             self.action_ensemble = True
@@ -179,9 +183,12 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
                     [gripper_openness],
                 ]
             )
-        prompts = ["google robot: ", "widowx: "]
 
-        return state, prompts[1] + prompt
+        if self.add_taks_prefix:
+            prompts = ["google robot: ", "widowx: "]
+            prompt = prompts[1] + prompt
+
+        return state, prompt
 
     def preprocess_google_robot_proprio(self, eef_pos: np.ndarray, prompt: str) -> dict:
         """convert wxyz quat from simpler to xyzw used in fractal"""
@@ -196,6 +203,7 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
                     [gripper_closedness],
                 )
             )
+
         else: 
             gripper_width = eef_pos[-1]  # from simpler, 0 for close, 1 for open continuous
             gripper_closedness = (
@@ -210,10 +218,12 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
                 )
             )
 
-        prompts = ["google robot: ", "widowx: "]
 
-        return state, prompts[0] + prompt
+        if self.add_taks_prefix:
+            prompts = ["google robot: ", "widowx: "]
+            prompt = prompts[0] + prompt
 
+        return state, prompt
     def step(self, image: np.ndarray, task_description: Optional[str] = None, *args, **kwargs):
         """
         Input:
@@ -272,32 +282,37 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
         action["rot_axangle"] = action_rotation_axangle * self.action_scale
 
         if self.policy_setup == "google_robot":
-            action["gripper"] = 0
-            current_gripper_action = raw_action["open_gripper"]
-            if self.previous_gripper_action is None:
-                relative_gripper_action = np.array([0])
-                self.previous_gripper_action = current_gripper_action
+            if self.sticky_action:
+                action["gripper"] = 0
+                current_gripper_action = raw_action["open_gripper"]
+                if self.previous_gripper_action is None:
+                    relative_gripper_action = np.array([0])
+                    self.previous_gripper_action = current_gripper_action
+                else:
+                    relative_gripper_action = self.previous_gripper_action - current_gripper_action
+
+                # fix a bug in the SIMPLER code here
+                # self.previous_gripper_action = current_gripper_action
+
+                if np.abs(relative_gripper_action) > 0.5 and (not self.sticky_action_is_on):
+                    self.sticky_action_is_on = True
+                    self.sticky_gripper_action = relative_gripper_action
+                    self.previous_gripper_action = current_gripper_action
+
+                if self.sticky_action_is_on:
+                    self.gripper_action_repeat += 1
+                    relative_gripper_action = self.sticky_gripper_action
+
+                if self.gripper_action_repeat == self.sticky_gripper_num_repeat:
+                    self.sticky_action_is_on = False
+                    self.gripper_action_repeat = 0
+                    self.sticky_gripper_action = 0.0
             else:
-                relative_gripper_action = self.previous_gripper_action - current_gripper_action
-
-            # fix a bug in the SIMPLER code here
-            # self.previous_gripper_action = current_gripper_action
-
-            if np.abs(relative_gripper_action) > 0.5 and (not self.sticky_action_is_on):
-                self.sticky_action_is_on = True
-                self.sticky_gripper_action = relative_gripper_action
-                self.previous_gripper_action = current_gripper_action
-
-            if self.sticky_action_is_on:
-                self.gripper_action_repeat += 1
-                relative_gripper_action = self.sticky_gripper_action
-
-            if self.gripper_action_repeat == self.sticky_gripper_num_repeat:
-                self.sticky_action_is_on = False
-                self.gripper_action_repeat = 0
-                self.sticky_gripper_action = 0.0
-
-            action["gripper"] = relative_gripper_action
+                current_gripper_action = raw_action["open_gripper"]
+                current_gripper_action = (current_gripper_action * 2) - 1
+                current_gripper_action = - current_gripper_action
+                action["gripper"] = current_gripper_action
+                action["gripper"] = relative_gripper_action
 
         elif self.policy_setup == "widowx_bridge":
             action["gripper"] = 2.0 * (raw_action["open_gripper"] > 0.5) - 1.0

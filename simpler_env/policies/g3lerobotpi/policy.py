@@ -8,7 +8,7 @@ from simpler_env.policies.base import AiroaBasePolicy
 from g3_haptics.utils.lerobot_dataset_utils import create_g3multi_embodiment
 from g3_haptics.datasets.embodiment import EmbodimentTag
 
-class G3Pi0mutiLerobotToAiroaPolicy(AiroaBasePolicy):
+class G3Pi0multiLerobotToAiroaPolicy(AiroaBasePolicy):
     def __init__(
         self,
         policy,
@@ -30,7 +30,7 @@ class G3Pi0mutiLerobotToAiroaPolicy(AiroaBasePolicy):
         self.policy_setup = policy_setup
         if self.policy_setup == "google_robot":
             self.tag = 0 
-        else:
+        elif policy_setup == "widowx_bridge":
             self.tag = 1        
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
