@@ -205,10 +205,10 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
             )
 
         else: 
-            gripper_width = eef_pos[-1]  # from simpler, 0 for close, 1 for open continuous
-            gripper_closedness = (
-                1 - gripper_width
-            ) 
+            gripper_closedness = eef_pos[-1]  # from simpler, 0 for close, 1 for open continuous
+            #gripper_closedness = (
+            #    1 - gripper_width
+            #) 
             quat_xyzw = np.roll(eef_pos[3:7], -1)
             state = np.concatenate(
                 (
@@ -307,12 +307,14 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
                     self.sticky_action_is_on = False
                     self.gripper_action_repeat = 0
                     self.sticky_gripper_action = 0.0
+                
+                action["gripper"] = relative_gripper_action
+            
             else:
                 current_gripper_action = raw_action["open_gripper"]
                 current_gripper_action = (current_gripper_action * 2) - 1
                 current_gripper_action = - current_gripper_action
                 action["gripper"] = current_gripper_action
-                action["gripper"] = relative_gripper_action
 
         elif self.policy_setup == "widowx_bridge":
             action["gripper"] = 2.0 * (raw_action["open_gripper"] > 0.5) - 1.0
