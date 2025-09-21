@@ -205,10 +205,10 @@ class AiroaToG3Pi0FractalBridgeAdapter(BaseAdapter):
             )
 
         else: 
-            gripper_closedness = eef_pos[-1]  # from simpler, 0 for close, 1 for open continuous
-            #gripper_closedness = (
-            #    1 - gripper_width
-            #) 
+            gripper_width = eef_pos[-1]  # from simpler, 0 for close, 1 for open continuous
+            gripper_closedness = (
+                1 - gripper_width
+            ) 
             quat_xyzw = np.roll(eef_pos[3:7], -1)
             state = np.concatenate(
                 (
