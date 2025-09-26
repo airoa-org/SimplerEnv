@@ -4,7 +4,7 @@ from openpi_client import action_chunk_broker
 
 from openpi.policies import policy_config as _policy_config
 from openpi.training import config as _config
-from simpler_env.evaluation.evaluate import run_comprehensive_evaluation
+from simpler_env.evaluation.fractal_tasks import run_comprehensive_evaluation
 from simpler_env.policies.adapter import AiroaToSimplerFractalAdapter
 from simpler_env.policies.hsr_openpi.pi0_or_fast import OpenpiToAiroaPolicy
 
