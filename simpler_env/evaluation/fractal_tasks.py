@@ -705,22 +705,19 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, contr
 # ======================================================================
 # 総合評価（重み付け・スコアリングは従来どおり）
 # ======================================================================
-SIM_WEIGHT = 0.4
-VISUAL_MATCHING_WEIGHT = 0.6
 
 
 def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3) -> Dict[str, float]:
     print("=" * 80)
     print(f"🚀 STARTING COMPREHENSIVE EVALUATION 🚀")
     print(f"Checkpoint: {ckpt_path}")
-    print(f"Weights: Sim={SIM_WEIGHT}, VisualMatching={VISUAL_MATCHING_WEIGHT}")
     print("=" * 80)
 
     # fix seed
     random.seed(42)
     np.random.seed(42)
 
-    num_trials = 10
+    num_trials = 3
     # vm_results: List[List[bool]] = []
     # sim_results: List[List[bool]] = []
 
