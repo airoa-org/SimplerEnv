@@ -35,7 +35,10 @@ def calculate_score(results: List[bool], penalty_factor: float = 0.5) -> Tuple[f
     return float(successes_rate), wilson_lower, std_dev
 
 
-def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 53
+    max_episode_steps = max_time * control_freq  # Original: 160
+
     print("\n--- pick_object_visual_matching ---")
     results: List[List[bool]] = []
 
@@ -49,9 +52,9 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num
     base_kwargs = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=160,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
@@ -80,11 +83,14 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num
     return results
 
 
-def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
     """
     ランダムにシーン/姿勢/環境/照明を選んで評価を繰り返す。
     戻り値は各トライアルの _run_single_evaluation の結果のリスト。
     """
+    max_time = 53
+    max_episode_steps = max_time * control_freq  # Original: 160
+    
     print("\n--- pick_object_variant_agg ---")
 
     results: List[List[bool]] = []
@@ -114,9 +120,9 @@ def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_t
     base_kwargs: Dict[str, Any] = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=160,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
@@ -154,7 +160,10 @@ def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, num_t
     return results
 
 
-def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 53
+    max_episode_steps = max_time * control_freq  # Original: 160
+
     print("\n--- pick_object_among_visual_matching ---")
     results: List[List[bool]] = []
 
@@ -168,9 +177,9 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
     base_kwargs = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=160,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
@@ -199,7 +208,10 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
     return results
 
 
-def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 53
+    max_episode_steps = max_time * control_freq  # Original: 160
+
     print("\n--- pick_object_among_variant_agg ---")
     results: List[List[bool]] = []
 
@@ -225,9 +237,9 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, n
     base_kwargs = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=160,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.20, 0.20, 1],
@@ -264,7 +276,10 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, n
     return results
 
 
-def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 38
+    max_episode_steps = max_time * control_freq  # Original: 113
+
     print("\n--- drawer_visual_matching ---")
     results: List[List[bool]] = []
 
@@ -281,9 +296,9 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_tria
     base = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=113,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[0, 0, 1],
@@ -367,7 +382,10 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_tria
     return results
 
 
-def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 38
+    max_episode_steps = max_time * control_freq  # Original: 113
+
     print("\n--- drawer_variant_agg ---")
     results: List[List[bool]] = []
 
@@ -383,9 +401,9 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: 
     base = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=113,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_x_range=[0.65, 0.85, 3],
         robot_init_y_range=[-0.2, 0.2, 3],
@@ -429,16 +447,19 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: 
     return results
 
 
-def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 53
+    max_episode_steps = max_time * control_freq  # Original: 160
+
     print("\n--- move_near_visual_matching ---")
     results: List[List[bool]] = []
 
     base_kwargs = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=160,
+        max_episode_steps=max_episode_steps,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.21, 0.21, 1],
         obj_variation_mode="episode",
@@ -467,16 +488,19 @@ def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
     return results
 
 
-def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 27
+    max_episode_steps = max_time * control_freq  # Original: 80
+
     print("\n--- move_near_variant_agg ---")
     results: List[List[bool]] = []
 
     base_kwargs = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=80,
+        max_episode_steps=max_episode_steps,
         robot_init_x_range=[0.35, 0.35, 1],
         robot_init_y_range=[0.21, 0.21, 1],
         obj_variation_mode="episode",
@@ -514,7 +538,10 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trial
     return results
 
 
-def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 133
+    max_episode_steps = max_time * control_freq  # Original: 400
+
     print("\n--- put_in_drawer_visual_matching ---")
     results: List[List[bool]] = []
 
@@ -524,9 +551,9 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, n
     base = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=400,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[-0.08, -0.02, 3],
@@ -595,16 +622,19 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, n
     return results
 
 
-def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_trials: int = 30) -> List[List[bool]]:
+def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3, num_trials: int = 30) -> List[List[bool]]:
+    max_time = 133
+    max_episode_steps = max_time * control_freq  # Original: 400
+
     print("\n--- put_in_drawer_variant_agg ---")
     results: List[List[bool]] = []
 
     common = dict(
         robot="google_robot_static",
         policy_setup="google_robot",
-        control_freq=3,
+        control_freq=control_freq,
         sim_freq=513,
-        max_episode_steps=400,
+        max_episode_steps=max_episode_steps,
         ckpt_path=ckpt_path,
         robot_init_rot_quat_center=[0, 0, 0, 1],
         obj_init_x_range=[-0.08, -0.02, 3],
@@ -677,7 +707,7 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, num_t
 # ======================================================================
 
 
-def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) -> Dict[str, float]:
+def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 3) -> Dict[str, float]:
     print("=" * 80)
     print(f"🚀 STARTING COMPREHENSIVE EVALUATION 🚀")
     print(f"Checkpoint: {ckpt_path}")
@@ -706,43 +736,43 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str) ->
     # vm_results += put_in_drawer_visual_matching(env_policy, ckpt_path, num_trials)
     # sim_results += put_in_drawer_variant_agg(env_policy, ckpt_path, num_trials)
 
-    results = pick_object_visual_matching(env_policy, ckpt_path, num_trials)
+    results = pick_object_visual_matching(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(
         f"Pick Object Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
     )
-    results = pick_object_variant_agg(env_policy, ckpt_path, num_trials)
+    results = pick_object_variant_agg(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(f"Pick Object Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}")
 
-    results = pick_object_among_visual_matching(env_policy, ckpt_path, num_trials)
+    results = pick_object_among_visual_matching(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(
         f"Pick Object Among Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
     )
-    results = pick_object_among_variant_agg(env_policy, ckpt_path, num_trials)
+    results = pick_object_among_variant_agg(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(
         f"Pick Object Among Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
     )
-    results = drawer_visual_matching(env_policy, ckpt_path, num_trials)
+    results = drawer_visual_matching(env_policy, ckpt_path, control_freq, num_trials)
 
-    results = drawer_variant_agg(env_policy, ckpt_path, num_trials)
+    results = drawer_variant_agg(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(f"Drawer Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}")
-    results = move_near_visual_matching(env_policy, ckpt_path, num_trials)
+    results = move_near_visual_matching(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(
         f"Move Near Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
     )
-    results = move_near_variant_agg(env_policy, ckpt_path, num_trials)
+    results = move_near_variant_agg(env_policy, ckpt_path, control_freq, num_trials)
 
-    results = put_in_drawer_visual_matching(env_policy, ckpt_path, num_trials)
+    results = put_in_drawer_visual_matching(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(
         f"Put In Drawer Visual Matching Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
     )
-    results = put_in_drawer_variant_agg(env_policy, ckpt_path, num_trials)
+    results = put_in_drawer_variant_agg(env_policy, ckpt_path, control_freq, num_trials)
     success_rate, wilson_score, standard_deviation = calculate_score(results)
     print(
         f"Put In Drawer Variant Agg Success Rate: {success_rate:.4f}, Wilson Score: {wilson_score:.4f}, Standard Deviation: {standard_deviation:.4f}"
