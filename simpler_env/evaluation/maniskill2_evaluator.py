@@ -171,9 +171,6 @@ def run_maniskill2_eval_single_episode(
             timestep += 1
             pbar.update(1)
 
-            if success == "success":
-                break
-
     episode_stats = info.get("episode_stats", {})
 
     ckpt_path_basename = ckpt_path if ckpt_path[-1] != "/" else ckpt_path[:-1]
