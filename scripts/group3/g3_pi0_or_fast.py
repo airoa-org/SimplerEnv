@@ -24,6 +24,7 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
         action_ensemble: bool = True,
         action_ensemble_temp: float = -0.8,
         sticky_action: bool = True,
+        n_action_steps: int = 4,
     ) -> None:
         gpu_idx = os.environ.get("GPU_IDX", 0)
         self.device = f"cuda:{gpu_idx}"
@@ -53,6 +54,7 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
         self.vla = PI0Policy.from_pretrained(saved_model_path)
         self.vla.model.paligemma_with_expert.paligemma.language_model = self.vla.model.paligemma_with_expert.paligemma.language_model.model
         self.vla.model.paligemma_with_expert.gemma_expert.model = self.vla.model.paligemma_with_expert.gemma_expert.model.base_model
+        self.vla.config.n_action_steps = n_action_steps
         self.vla.to(self.device)
         self.vla.reset()
 

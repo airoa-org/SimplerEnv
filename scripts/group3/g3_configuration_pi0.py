@@ -13,3 +13,5 @@ class G3PI0Config(PI0Config):
     ft_key : str = ""
     encoder_type : str = "seq_cnn"
     finetune: bool = False
+    finetune_model: str = ""
+    multi_embodiment: bool = False
