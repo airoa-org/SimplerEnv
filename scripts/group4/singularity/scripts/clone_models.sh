@@ -1,5 +1,7 @@
 #!/bin/bash
+# Load shared environment variables
+source "$(dirname "$0")/env.sh"
 
-cd models
+cd ./../../
 
-git clone https://github.com/airoa-org/hsr_openpi.git -b release
+git clone https://github.com/airoa-org/hsr_openpi.git -b feature/group4

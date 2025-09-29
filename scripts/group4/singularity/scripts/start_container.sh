@@ -30,19 +30,19 @@ mkdir -p $SIMPLER_ENV_DIR || {
 }
 
 singularity exec --fakeroot \
-    --bind "$GROUP_DATA_DIR:/opt/processed" \
-    --bind /usr/share/vulkan:/usr/share/vulkan \
-    --bind /usr/share/glvnd:/usr/share/glvnd \
-    --bind /usr/share/nvidia:/usr/share/nvidia\
-    --bind "/home/group_25b505:/home/group_25b505" \
-    --bind "$OPENPI_DIR:$OPENPI_DIR_SIF" \
-    --bind "$SIMPLER_ENV_DIR:$SIMPLER_ENV_DIR_SIF" \
-    --bind "$CODEBASE_DIR/singularity/scripts/.bash_aliases:/root/.bash_aliases" \
-    --bind "$CODEBASE_DIR/singularity/scripts:$OPENPI_DIR_SIF/scripts_launch" \
-    --pwd $OPENPI_DIR_SIF \
-    --nv \
-    "$CODEBASE_DIR/singularity/sif/hsr_openpi_simplerenv.sif" \
-    bash || {
+  --home /scratch/$USER:/root \
+  --bind /scratch/$USER:/scratch \
+  --bind /usr/share/vulkan:/usr/share/vulkan \
+  --bind /usr/share/glvnd:/usr/share/glvnd \
+  --bind /usr/share/nvidia:/usr/share/nvidia \
+  --bind "/home/group_25b505:/home/group_25b505" \
+  --bind "$OPENPI_DIR:$OPENPI_DIR_SIF" \
+  --bind "$SIMPLER_ENV_DIR:$SIMPLER_ENV_DIR_SIF" \
+  --bind "$SINGULARITY_DIR/scripts/.bash_aliases:/root/.bash_aliases" \
+  --bind "$SINGULARITY_DIR/scripts:$OPENPI_DIR_SIF/scripts_launch" \
+  --pwd "$OPENPI_DIR_SIF" \
+  --nv \
+  "$SIF_FILE" bash "$@" || {
     echo "Failed to start Singularity exec"
     exit 1
 }
