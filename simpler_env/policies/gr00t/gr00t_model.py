@@ -34,14 +34,14 @@ class Gr00tInference:
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         if policy_setup == "widowx_bridge":
             action_ensemble = False
-            data_config = "widowx" # widowx, widowx_chunk1
+            data_config = "widowx"
             image_size = [256, 256]
             self.sticky_gripper_num_repeat = 1
             # EE pose in Bridge data was relative to a top-down pose, instead of robot base
             self.default_rot = np.array([[0, 0, 1.0], [0, 1.0, 0], [-1.0, 0, 0]])  # https://github.com/rail-berkeley/bridge_data_robot/blob/b841131ecd512bafb303075bd8f8b677e0bf9f1f/widowx_envs/widowx_controller/src/widowx_controller/widowx_controller.py#L203
             embodiment_tag = "new_embodiment" # new_embodiment or widowx
         elif policy_setup == "google_robot":
-            data_config = "google_robot" # google_robot, google_robot_chunk1
+            data_config = "google_robot"
             action_ensemble = False
             image_size = [320, 256]
             self.sticky_gripper_num_repeat = 10
