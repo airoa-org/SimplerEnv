@@ -52,7 +52,7 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
         self._placeholder_src = "__random_src_placeholder__"
         self._user_src_pool = candidate_source_names
 
-        self._grasp_hold_steps = int(grasp_hold_seconds * 5)  # fps = 5
+        self.grasp_hold_seconds = grasp_hold_seconds
         self.consecutive_grasp = 0
 
         super().__init__(
@@ -74,6 +74,8 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
         options = options.copy()
         self.set_episode_rng(seed)
 
+        self._grasp_hold_steps = int(self.grasp_hold_seconds * self.control_freq)
+
         if self._user_src_pool is not None:
             src_candidates = list(self._user_src_pool)
         else:
@@ -85,7 +87,7 @@ class GraspRandomObjectInScene(PutOnBridgeInSceneEnv):
             ]
         assert len(src_candidates) > 0, "No valid source objects to grasp."
 
-        self._source_obj_name = random_choice(src_candidates)
+        self._source_obj_name = random_choice(src_candidates, rng=self._episode_rng)
 
         self.consecutive_grasp = 0
         self._grasp_success_locked = False
@@ -183,7 +185,7 @@ class StackRandomGreenYellowCubeInScene(PutOnBridgeInSceneEnv):
         green = "green_cube_3cm"
         yellow = "yellow_cube_3cm"
 
-        if random_choice([0, 1]):
+        if random_choice([0, 1], rng=self._episode_rng):
             src, tgt = green, yellow
         else:
             src, tgt = yellow, green
@@ -277,11 +279,11 @@ class PutRandomObjectOnRandomTopInScene(PutOnBridgeInSceneEnv):
         assert len(src_candidates) > 0, "No valid source objects for random put-on task."
         assert len(tgt_candidates) > 0, "No valid container candidates for random put-on task."
 
-        chosen_src = random_choice(src_candidates)
-        chosen_tgt = random_choice(tgt_candidates)
+        chosen_src = random_choice(src_candidates, rng=self._episode_rng)
+        chosen_tgt = random_choice(tgt_candidates, rng=self._episode_rng)
         if chosen_src == chosen_tgt and len(src_candidates) > 1:
             alt = [x for x in src_candidates if x != chosen_tgt]
-            chosen_src = random_choice(alt, self._episode_rng)
+            chosen_src = random_choice(alt, self._episode_rng, rng=self._episode_rng)
 
         self._source_obj_name = chosen_src
         self._target_obj_name = chosen_tgt
@@ -401,7 +403,7 @@ class PutRandomObjectInBasketScene(PutOnBridgeInSceneEnv):
             ]
 
         assert len(candidates) > 0, "No valid source objects found for random basket task."
-        self._source_obj_name = random_choice(candidates)
+        self._source_obj_name = random_choice(candidates, rng=self._episode_rng)
 
         obs, info = super().reset(seed=self._episode_seed, options=options)
         info.update({"random_source_obj_name": self._source_obj_name})
