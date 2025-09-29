@@ -20,9 +20,9 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    N_ACTION_STEPS = 1
-    ACTION_ENSEMBLE_TEMP = 0.8
-    ACTION_ENSEMBLE = False
+    N_ACTION_STEPS = 2
+    ACTION_ENSEMBLE_TEMP = 0.6
+    ACTION_ENSEMBLE = True
     STICKY_ACTION = False
 
     args = parse_args()
