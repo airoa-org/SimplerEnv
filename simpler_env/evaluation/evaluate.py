@@ -68,6 +68,7 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str) -> 
         for orientation in direction_orientationions_arr:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name="pick_object_visual_matching",
                 env_name="GraspSingleRandomObjectInScene-v0",
                 scene_name="google_pick_coke_can_1_v4",
                 rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
@@ -121,6 +122,7 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
         for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name=scene,
                 env_name="GraspSingleRandomObjectInScene-v0",
                 scene_name=scene,
                 additional_env_build_kwargs={**orientation},
@@ -133,6 +135,7 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
         for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name=scene,
                 env_name="GraspSingleRandomObjectInScene-v0",
                 scene_name=scene,
                 additional_env_build_kwargs={**orientation},
@@ -163,6 +166,7 @@ def pick_object_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -> List
         for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name=env,
                 env_name=env,
                 scene_name="google_pick_coke_can_1_v4",
                 additional_env_build_kwargs={**orientation},
@@ -307,6 +311,7 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
         for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name=urdf,
                 env_name="GraspSingleRandomObjectDistractorInScene-v0",
                 scene_name="google_pick_coke_can_1_v4",
                 rgb_overlay_path="./ManiSkill2_real2sim/data/real_inpainting/google_coke_can_real_eval_1.png",
@@ -360,6 +365,7 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
         for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name=scene,
                 env_name="GraspSingleRandomObjectDistractorInScene-v0",
                 scene_name=scene,
                 additional_env_build_kwargs={**orientation, "distractor_config": "less"},
@@ -372,6 +378,7 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
         for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name=scene,
                 env_name="GraspSingleRandomObjectDistractorInScene-v0",
                 scene_name=scene,
                 additional_env_build_kwargs={**orientation, "distractor_config": "less"},
@@ -402,6 +409,7 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str) -
         for orientation in object_orientation:
             cfg = ManiSkill2Config(
                 **base_kwargs,
+                task_name=env,
                 env_name=env,
                 scene_name="google_pick_coke_can_1_v4",
                 additional_env_build_kwargs={**orientation, "distractor_config": "less"},
