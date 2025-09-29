@@ -32,7 +32,7 @@ pip install statsmodels==0.14.5
 conda install -y -c conda-forge libiconv=1.17 libgcc-ng libstdcxx-ng
 
 # Downlaod the group3 simpler_env model from wasabi
-conda install -c conda-forge awscli
+conda install -y -c conda-forge awscli
 aws s3 cp s3://airoa-fm-development-competition/group3/submitted_202509291552_simpler ./g3_simpler_model/ --recursive --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
 ```
 
