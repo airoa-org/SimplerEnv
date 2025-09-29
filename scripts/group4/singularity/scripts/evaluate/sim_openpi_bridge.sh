@@ -10,5 +10,5 @@ cd SimplerEnv
 # uv pip install "tensorflow-cpu==2.15.*"
 # uv pip install mediapy
 
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} python ./scripts/openpi/evaluate_bridge.py\
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} python ./scripts/group4/evaluate_bridge.py\
  --ckpt-path /home/group_25b505/group_4/members/kuramitsu/geniac25_team4_codebase/models/hsr_openpi/checkpoints/pi0_fractal_low_mem_finetune/my_experiment/39999
