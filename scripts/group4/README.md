@@ -91,3 +91,6 @@ socket通信方式のため、tmux等を用いて複数プロセスを同時に�
     ---
         bash scripts_launch/evaluate/sim_openpi_bridge.sh
     ---
+
+### model path
+    - s3://airoa-fm-development-competition/group4/simplerenv_checkpoints/
