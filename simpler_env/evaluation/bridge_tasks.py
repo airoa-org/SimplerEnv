@@ -18,6 +18,16 @@ def get_next_episode_id():
 
 def custom_run_single_evaluation_with_counter(env_policy: AiroaBasePolicy, cfg: ManiSkill2Config, ckpt_path: str, start_episode_id: int = 0) -> List[bool]:
     """各オブジェクトエピソードごとに異なるepisode_idを使用する評価関数"""
+    if cfg.additional_env_build_kwargs:
+        if "urdf_version" in cfg.additional_env_build_kwargs:
+            kwargs_info = cfg.additional_env_build_kwargs["urdf_version"]
+        else:
+            kwargs_info = cfg.additional_env_build_kwargs
+    else:
+        kwargs_info = None
+
+    print(f"  ▶️  Running: env={cfg.env_name}, scene={cfg.scene_name}, kwargs={kwargs_info}")
+    
     control_mode = get_robot_control_mode(cfg.robot, cfg.policy_model)
     success_arr = []
     
@@ -58,6 +68,8 @@ def custom_run_single_evaluation_with_counter(env_policy: AiroaBasePolicy, cfg: 
         # 他のバリエーションモードは元の実装を使用
         return _run_single_evaluation(env_policy, cfg, ckpt_path)
     
+    # 成功率を出力
+    print(f"  ✅  Success Rate: {np.mean(success_arr):.2%}")
     return success_arr
 
 
