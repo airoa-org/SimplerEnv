@@ -22,7 +22,7 @@ if __name__ == "__main__":
     policy = OpenpiToAiroaPolicy(
         policy=action_chunk_broker.ActionChunkBroker(
             policy=_policy_config.create_trained_policy(
-                _config.get_config("pi0_fractal_lora"),
+                _config.get_config("pi0_fractal_low_mem_finetune"),
                 ckpt_path,
             ),
             action_horizon=10,
