@@ -29,13 +29,14 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
         gpu_idx = os.environ.get("GPU_IDX", 0)
         self.device = f"cuda:{gpu_idx}"
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+        self.default_rot = np.array(
+            [[0, 0, 1.0], [0, 1.0, 0], [-1.0, 0, 0]]
+        )  # https://github.com/rail-berkeley/bridge_data_robot/blob/b841131ecd512bafb303075bd8f8b677e0bf9f1f/widowx_envs/widowx_controller/src/widowx_controller/widowx_controller.py#L203
         if policy_setup == "widowx_bridge":
             unnorm_key = "bridge_orig/1.0.0" if unnorm_key is None else unnorm_key
             self.sticky_gripper_num_repeat = 1
             # EE pose in Bridge data was relative to a top-down pose, instead of robot base
-            self.default_rot = np.array(
-                [[0, 0, 1.0], [0, 1.0, 0], [-1.0, 0, 0]]
-            )  # https://github.com/rail-berkeley/bridge_data_robot/blob/b841131ecd512bafb303075bd8f8b677e0bf9f1f/widowx_envs/widowx_controller/src/widowx_controller/widowx_controller.py#L203
         elif policy_setup == "google_robot":
             unnorm_key = "fractal20220817_data/0.1.0" if unnorm_key is None else unnorm_key
             self.sticky_gripper_num_repeat = 10
@@ -62,7 +63,7 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
         self.action_scale = action_scale
         self.obs_horizon = 1
         self.obs_interval = 1
-        self.pred_action_horizon = self.vla.config.chunk_size
+        self.pred_action_horizon = self.vla.config.n_action_steps
         self.image_history = deque(maxlen=self.obs_horizon)
         self.exec_horizon = exec_horizon
 
@@ -106,23 +107,22 @@ class G3LerobotPiFastInference(LerobotPiFastInference):
         images: List[Image.Image] = self._obtain_image_history()
 
         eef_pos = kwargs.get("eef_pos", None)
-        if self.policy_setup == "widowx_bridge":
-            state = self.preprocess_widowx_proprio(eef_pos)
-            image_key = "observation.images.image_0"
-        elif self.policy_setup == "google_robot":
-            state = self.preprocess_google_robot_proprio(eef_pos)
-            image_key = "observation.images.image"
 
+        state = self.preprocess_widowx_proprio(eef_pos)
         observation = {
             "observation.state": torch.from_numpy(state).unsqueeze(0).to(self.device).float(),
-            image_key: torch.from_numpy(images[0] / 255).permute(2, 0, 1).unsqueeze(0).to(self.device).float(),
+            "observation.images.image_0": torch.from_numpy(images[0] / 255).permute(2, 0, 1).unsqueeze(0).to(self.device).float(),
+            "observation.images.image_1": torch.from_numpy(images[0] / 255).permute(2, 0, 1).unsqueeze(0).to(self.device).float(),
+            "observation.images.image_2": torch.from_numpy(images[0] / 255).permute(2, 0, 1).unsqueeze(0).to(self.device).float(),
+            "observation.images.image_3": torch.from_numpy(images[0] / 255).permute(2, 0, 1).unsqueeze(0).to(self.device).float(),
             "task": [task_description],
         }
+
         actions = self.vla.select_action(observation)[0].cpu().numpy()
 
         if self.action_ensemble:
             action_chunk = [actions]
-            for _ in range(self.vla.config.chunk_size-1):
+            for _ in range(self.vla.config.n_action_steps-1):
                 actions = self.vla.select_action(observation)[0].cpu().numpy()
                 action_chunk.append(actions)
             action_chunk = np.stack(action_chunk, axis=0)
