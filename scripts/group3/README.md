@@ -10,7 +10,7 @@ git submodule update --init --recursive
 
 # Create a conda environment
 export REPO_ROOT="$(pwd -P)"
-conda env create -f scripts/group3/environment.yml
+conda env create -f scripts/group3/environment.yaml
 conda activate simpler-benchmark-v2-g3-submission
 
 # Downlaod the group3 simpler_env model from wasabi
