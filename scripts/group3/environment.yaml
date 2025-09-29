@@ -1,0 +1,30 @@
+name: simpler-benchmark-v2-g3-submission
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  # system/conda packages
+  - ffmpeg
+  - libvulkan-loader
+  - libvulkan-headers
+  - libiconv=1.17
+  - libgcc-ng
+  - libstdcxx-ng
+  - awscli
+  - pip
+
+  - pip:
+      - numpy==1.25.2
+
+      - -e file://${REPO_ROOT}/ManiSkill2_real2sim
+      - -e file://${REPO_ROOT}
+
+      - torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+      - torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
+      - torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+
+      - git+ssh://git@github.com/huggingface/lerobot.git@67196c9d5344cd932612cef79229f9d04134c91e#egg=lerobot[pi0]
+
+      - pytest
+      - statsmodels==0.14.5
