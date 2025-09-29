@@ -12,6 +12,7 @@ dependencies = [
     "matplotlib",
     "setuptools>=80.9.0",
     "openpi-client",
+    "awscli>=1.42.40",
 ]
 
 
