@@ -28,6 +28,8 @@ pip install numpy==1.25.2
 
 pip install pytest
 pip install -e "git+ssh://git@github.com/airoa-org/geniac25_team3_haptics.git@user_00047_25b505#egg=g3_haptics"
+pip install statsmodels==0.14.5
+conda install -y -c conda-forge libiconv=1.17 libgcc-ng libstdcxx-ng
 ```
 
 
