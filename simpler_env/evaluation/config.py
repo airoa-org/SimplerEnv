@@ -15,7 +15,7 @@ class ManiSkill2Config:
     # Required parameters
     env_name: str  # required=True in argparse
     task_name: str
-    episode_id: int = 0
+    episode_id: int = None
 
     # Policy settings
     policy_model: str = "rt1"
