@@ -2,12 +2,13 @@ import argparse
 
 from openpi_client import action_chunk_broker
 
+from evaluation.evaluate_bridge import run_comprehensive_evaluation_bridge
 from openpi.policies import policy_config as _policy_config
 from openpi.training import config as _config
-from simpler_env.evaluation.fractal_tasks import run_comprehensive_evaluation
+from simpler_env.evaluation.evaluate import run_comprehensive_evaluation
 from simpler_env.policies.adapter import AiroaToSimplerFractalAdapter
 from simpler_env.policies.hsr_openpi.pi0_or_fast import OpenpiToAiroaPolicy
-
+from simpler_env.policies.adapter import AiroaToSimplerBridgeAdapter
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
@@ -29,11 +30,11 @@ if __name__ == "__main__":
         ),
     )
 
-    env_policy = AiroaToSimplerFractalAdapter(policy=policy)
+    env_policy = AiroaToSimplerBridgeAdapter(policy=policy)
 
     print("Policy initialized. Starting evaluation...")
 
-    final_scores = run_comprehensive_evaluation(env_policy=env_policy, ckpt_path=args.ckpt_path)
+    final_scores = run_comprehensive_evaluation_bridge(env_policy=env_policy, ckpt_path=args.ckpt_path)
 
     print("\nEvaluation finished.")
     print(f"Final calculated scores: {final_scores}")
