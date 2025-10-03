@@ -269,6 +269,7 @@ def maniskill2_evaluator(model, args):
 
 
 def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y, robot_init_quat):
+    success_arr = []
     kwargs = dict(
         model=model,
         task_name=args.task_name,
@@ -316,7 +317,6 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
             obj_init_y = rng.uniform(args.obj_init_y_range[0], args.obj_init_y_range[1])
             success = run_maniskill2_eval_single_episode(obj_init_x=obj_init_x, obj_init_y=obj_init_y, **kwargs)
             success_arr.append(success)
-
     else:
         raise NotImplementedError()
 
