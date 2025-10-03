@@ -29,8 +29,9 @@ def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str, contro
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
         ckpt_path=ckpt_path,
         task_name="widowx_task1_pick_object",
+        episode_id=episode_id,
     )
-    results.append(maniskill2_evaluator(env_policy, cfg))
+    results.append(custom_run_single_evaluation_with_counter(env_policy, cfg, ckpt_path, episode_id))
 
     return results
 
@@ -58,8 +59,9 @@ def widowx_task2_stack_cube(env_policy: AiroaBasePolicy, ckpt_path: str, control
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
         ckpt_path=ckpt_path,
         task_name="widowx_task2_stack_cube",
+        episode_id=episode_id,
     )
-    results.append(maniskill2_evaluator(env_policy, cfg))
+    results.append(custom_run_single_evaluation_with_counter(env_policy, cfg, ckpt_path, episode_id))
 
     return results
 
@@ -87,8 +89,9 @@ def widowx_task3_put_object_on_top(env_policy: AiroaBasePolicy, ckpt_path: str, 
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
         ckpt_path=ckpt_path,
         task_name="widowx_task3_put_object_on_top",
+        episode_id=episode_id,
     )
-    results.append(maniskill2_evaluator(env_policy, cfg))
+    results.append(custom_run_single_evaluation_with_counter(env_policy, cfg, ckpt_path, episode_id))
 
     return results
 
@@ -116,7 +119,8 @@ def widowx_task4_put_object_in_basket(env_policy: AiroaBasePolicy, ckpt_path: st
         robot_init_rot_rpy_range=[0, 0, 1, 0, 0, 1, 0, 0, 1],
         ckpt_path=ckpt_path,
         task_name="widowx_task4_put_object_in_basket",
+        episode_id=episode_id,
     )
-    results.append(maniskill2_evaluator(env_policy, cfg))
+    results.append(custom_run_single_evaluation_with_counter(env_policy, cfg, ckpt_path, episode_id))
 
     return results
