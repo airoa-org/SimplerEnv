@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 
+from . import random_envs
 from ..policies.base import AiroaBasePolicy
 from .config import ManiSkill2Config
 from .maniskill2_evaluator import maniskill2_evaluator
