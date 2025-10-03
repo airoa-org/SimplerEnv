@@ -1,0 +1,9 @@
+checkpoints/
+outputs/
+results/
+assets/
+*.sif
+models/**
+singularity/singularity_cache/
+singularity/tmp_build/
+singularity/sif/
