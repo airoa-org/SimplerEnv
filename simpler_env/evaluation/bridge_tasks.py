@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 from . import random_envs
 from ..policies.base import AiroaBasePolicy
 from .config import ManiSkill2Config
-from .evaluate import _run_single_evaluation
+from .maniskill2_evaluator import maniskill2_evaluator
 
 
 def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq: int = 5) -> List[List[bool]]:
@@ -30,7 +30,7 @@ def widowx_task1_pick_object(env_policy: AiroaBasePolicy, ckpt_path: str, contro
         ckpt_path=ckpt_path,
         task_name="widowx_task1_pick_object",
     )
-    results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+    results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
@@ -59,7 +59,7 @@ def widowx_task2_stack_cube(env_policy: AiroaBasePolicy, ckpt_path: str, control
         ckpt_path=ckpt_path,
         task_name="widowx_task2_stack_cube",
     )
-    results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+    results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
@@ -88,7 +88,7 @@ def widowx_task3_put_object_on_top(env_policy: AiroaBasePolicy, ckpt_path: str, 
         ckpt_path=ckpt_path,
         task_name="widowx_task3_put_object_on_top",
     )
-    results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+    results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
 
@@ -117,6 +117,6 @@ def widowx_task4_put_object_in_basket(env_policy: AiroaBasePolicy, ckpt_path: st
         ckpt_path=ckpt_path,
         task_name="widowx_task4_put_object_in_basket",
     )
-    results.append(_run_single_evaluation(env_policy, cfg, ckpt_path))
+    results.append(maniskill2_evaluator(env_policy, cfg))
 
     return results
