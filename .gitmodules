@@ -3,3 +3,6 @@
 	url = https://github.com/airoa-org/ManiSkill2_real2sim.git
 	# url = https://github.com/allenzren/ManiSkill2_real2sim.git
 	# url = https://github.com/simpler-env/ManiSkill2_real2sim
+[submodule "openpi"]
+	path = openpi
+	url = https://github.com/Azuma413/openpi_Azuma413.git
