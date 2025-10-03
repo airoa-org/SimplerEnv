@@ -5,10 +5,10 @@ import sapien.core as sapien
 from transforms3d.euler import euler2quat
 import numpy as np
 
-from mani_skill2_real2sim.utils.registration import register_env
-from mani_skill2_real2sim.utils.common import random_choice
-from mani_skill2_real2sim.envs.custom_scenes.put_on_in_scene import PutOnBridgeInSceneEnv
-from mani_skill2_real2sim import ASSET_DIR
+from ManiSkill2_real2sim.mani_skill2_real2sim.utils.registration import register_env
+from ManiSkill2_real2sim.mani_skill2_real2sim.utils.common import random_choice
+from ManiSkill2_real2sim.mani_skill2_real2sim.envs.custom_scenes.put_on_in_scene import PutOnBridgeInSceneEnv
+from ManiSkill2_real2sim.mani_skill2_real2sim import ASSET_DIR
 
 DEFAULT_OBJECTS = [
     "yellow_cube_3cm",
