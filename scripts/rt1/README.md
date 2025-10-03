@@ -1,13 +1,16 @@
 
 ```bash
+# Install Google Cloud SDK
 cd ..
 curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz
 tar -xf google-cloud-cli-linux-x86_64.tar.gz
 ./google-cloud-sdk/install.sh
 cd SimplerEnv
 
+# Create a virtual environment
 uv venv -p 3.10 scripts/rt1/.venv
 
+# Install dependencies
 source $(pwd)/scripts/rt1/.venv/bin/activate
 uv pip install tensorflow==2.15.0
 uv pip install -r requirements_full_install.txt
@@ -37,6 +40,6 @@ gsutil -m cp -r gs://gdm-robotics-open-x-embodiment/open_x_embodiment_and_rt_x_o
 mv rt_1_tf_trained_for_000001120 checkpoints      
 
 
-
+# Evaluate
 CUDA_VISIBLE_DEVICES=3 python scripts/rt1/evaluate_fractal.py --ckpt-path checkpoints/rt_1_tf_trained_for_000400120
 ```

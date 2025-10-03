@@ -1,6 +1,8 @@
 import argparse
+
+from simpler_env.evaluation.fractal_tasks import run_comprehensive_evaluation
 from simpler_env.policies.lerobotpi.pi0_or_fast import LerobotPiFastInference
-from simpler_env.evaluation.evaluate import run_comprehensive_evaluation
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
