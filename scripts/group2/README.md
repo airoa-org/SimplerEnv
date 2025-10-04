@@ -26,7 +26,7 @@ tar -xvf postrain.simpler.step282500.min_max.B64.quat.mask.attn.interleave-hiera
 
 ## Run Simpler evaluation
 ```
-python scripts/group2/evaluate_fractal.py --ckpt-path /PATH_TO_YOUR_WEIGHT/postrain.simpler.step282500.min_max.B64.quat.mask.attn.interleave-hierarchical/epochxx-global_stepxxx 
+python scripts/group2/evaluate_fractal.py --ckpt-path /PATH_TO_YOUR_WEIGHT/postrain.simpler.step282500.min_max.B64.quat.mask.attn.interleave-hierarchical/epoch35-global_step322500
 
-python scripts/group2/evaluate_bridge.py --ckpt-path /PATH_TO_YOUR_WEIGHT/postrain.simpler.step282500.min_max.B64.quat.mask.attn.interleave-hierarchical/epochxx-global_stepxxx 
+python scripts/group2/evaluate_bridge.py --ckpt-path /PATH_TO_YOUR_WEIGHT/postrain.simpler.step282500.min_max.B64.quat.mask.attn.interleave-hierarchical/epoch35-global_step322500
 ```
