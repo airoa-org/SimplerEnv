@@ -17,11 +17,11 @@ aws s3 cp s3://airoa-fm-development-competition/group1/simplerenv/openpi0-bridge
 ```
 - ポリシーを起動
 ```bash
-source scripts/openpi/.venv/bin/activate
-cd openpi
+cd ~/SimplerEnv/openpi
+source ../scripts/openpi/.venv/bin/activate
 export OPENPI_DATA_HOME="~/SimplerEnv/weights/openpi"
 export SERVER_ARGS="policy:checkpoint --policy.config=pi0_bridge_low_mem_finetune --policy.dir=../weights/openpi/openpi0-bridge-lora"
-uv run scripts/serve_policy.py $SERVER_ARGS
+python scripts/serve_policy.py $SERVER_ARGS
 ```
 - 評価実行（別ターミナル）
 ```bash
