@@ -1,5 +1,35 @@
 # SimplerEnv: Simulated Manipulation Policy Evaluation Environments for Real Robot Setups (Multi-model Support 🔥)
-
+## 実行手順
+- セットアップ
+```bash
+cd
+git clone -b group1/benchmark-v2 https://github.com/airoa-org/SimplerEnv.git --recursive
+cd SimplerEnv/openpi
+GIT_LFS_SKIP_SMUDGE=1 UV_PROJECT_ENVIRONMENT=../scripts/openpi/.venv uv sync
+source ../scripts/openpi/.venv/bin/activate
+GIT_LFS_SKIP_SMUDGE=1 uv pip install -e .
+cd ..
+uv pip install -e . ".[torch]"
+```
+- ポリシーを起動
+```bash
+source scripts/openpi/.venv/bin/activate
+mkdir -p weights/openpi
+aws s3 cp s3://airoa-fm-development-competition/bucket/group1/simplerenv/openpi0-bridge-lora weights/openpi/openpi0-bridge-lora --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+cd openpi_Azuma413
+export OPENPI_DATA_HOME="~/SourceCode/SimplerEnv/weights/openpi"
+export SERVER_ARGS="policy:checkpoint --policy.config=pi0_bridge_low_mem_finetune --policy.dir=../weights/openpi/openpi0-bridge-lora"
+uv run scripts/serve_policy.py $SERVER_ARGS
+```
+- 評価実行（別ターミナル）
+```bash
+uv sync
+uv add setuptools
+uv pip install torch torchvision
+source scripts/openpi/.venv/bin/activate
+uv run scripts/openpi/challenge_widowx.py --ckpt weights/openpi/openpi0-bridge-lora --control-freq 5
+```
+## レポジトリについて
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simpler-env/SimplerEnv/blob/main/example.ipynb)
 
 ![](./images/teaser.png)

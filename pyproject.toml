@@ -39,4 +39,4 @@ build-backend = "hatchling.build"
 
 [tool.uv.sources]
 mani_skill2_real2sim = { path = "ManiSkill2_real2sim", editable = true }
-openpi-client = { path = "openpi_Azuma413/packages/openpi-client", editable = true }
+openpi-client = { path = "openpi/packages/openpi-client", editable = true }
