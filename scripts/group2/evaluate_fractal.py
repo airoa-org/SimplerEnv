@@ -26,6 +26,7 @@ def initialize_policy(cfg: DictConfig) -> FractalPolicy:
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Comprehensive ManiSkill2 Evaluation")
     parser.add_argument("--ckpt-path", type=str, required=True, help="Path to the checkpoint to evaluate.")
+    parser.add_argument("--asset_dir", type=str, required=True, help="Path to the checkpoint to evaluate.")
     return parser.parse_args()
 
 
@@ -41,8 +42,8 @@ if __name__ == "__main__":
     policy_cfg = OmegaConf.load(policy_config_path)
     policy_cfg.device = 'auto'
     policy_cfg.checkpoint_path = ckpt_path
-    policy_cfg.dataset_dir = "/home/group_25b505/group_2/datasets"
-    policy_cfg.asset_dir = "/home/group_25b505/group_2/assets"
+    policy_cfg.dataset_dir = ""
+    policy_cfg.asset_dir = args.asset_dir
     
     policy = initialize_policy(policy_cfg)
     logger.info("Policy loaded successfully!")    
