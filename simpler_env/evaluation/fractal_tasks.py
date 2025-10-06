@@ -6,7 +6,7 @@ from statsmodels.stats.proportion import proportion_confint
 
 from ..policies.base import AiroaBasePolicy
 from .config import ManiSkill2Config
-from .maniskill2_evaluator import maniskill2_evaluator
+from .maniskill2_evaluator import maniskill2_evaluator, master_seed, rng
 
 
 def calculate_score(results: List[bool], penalty_factor: float = 0.5) -> Tuple[float, float, float]:
@@ -68,8 +68,8 @@ def pick_object_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, con
     )
 
     for i in range(num_trials):
-        urdf = random.choice(urdf_versions)
-        orientation = random.choice(direction_orientationions_arr)
+        urdf = rng.choice(urdf_versions)
+        orientation = rng.choice(direction_orientationions_arr)
         cfg = ManiSkill2Config(
             **base_kwargs,
             env_name="GraspSingleRandomObjectInScene-v0",
@@ -136,10 +136,10 @@ def pick_object_variant_agg(env_policy: "AiroaBasePolicy", ckpt_path: str, contr
     )
 
     for i in range(num_trials):
-        scene_name = random.choice(scenes)
-        env_name = random.choice(envs)
-        orientation = random.choice(object_orientation)
-        lighting = random.choice(lightings)
+        scene_name = rng.choice(scenes)
+        env_name = rng.choice(envs)
+        orientation = rng.choice(object_orientation)
+        lighting = rng.choice(lightings)
 
         add_kwargs = dict(orientation)
         if lighting == "darker":
@@ -193,8 +193,8 @@ def pick_object_among_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: st
     )
 
     for i in range(num_trials):
-        urdf = random.choice(urdf_versions)
-        orientation = random.choice(object_orientation)
+        urdf = rng.choice(urdf_versions)
+        orientation = rng.choice(object_orientation)
         cfg = ManiSkill2Config(
             **base_kwargs,
             env_name="GraspSingleRandomObjectDistractorInScene-v0",
@@ -253,10 +253,10 @@ def pick_object_among_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, c
     )
 
     for i in range(num_trials):
-        scene = random.choice(scenes)
-        env = random.choice(envs)
-        orientation = random.choice(object_orientation)
-        lighting = random.choice(lightings)
+        scene = rng.choice(scenes)
+        env = rng.choice(envs)
+        orientation = rng.choice(object_orientation)
+        lighting = rng.choice(lightings)
 
         add_kwargs = {**orientation, "distractor_config": "less"}
         if lighting == "darker":
@@ -367,9 +367,9 @@ def drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, control_
     add_base = dict(station_name="mk_station_recolor", light_mode="simple", disable_bad_material=True)
 
     for i in range(num_trials):
-        urdf = random.choice(urdf_versions)
-        env_name = random.choice(env_names)
-        pose = random.choice(overlay_poses)
+        urdf = rng.choice(urdf_versions)
+        env_name = rng.choice(env_names)
+        pose = rng.choice(overlay_poses)
         cfg = ManiSkill2Config(
             **base,
             env_name=env_name,
@@ -421,11 +421,11 @@ def drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, control_freq
     lightings = [None, "brighter", "darker"]
 
     for i in range(num_trials):
-        env_name = random.choice(env_names)
-        scene = random.choice(background_scenes)
-        station = random.choice(stations)
-        # enable_raytracing = random.choice([True, False])
-        light = random.choice(lightings)
+        env_name = rng.choice(env_names)
+        scene = rng.choice(background_scenes)
+        station = rng.choice(stations)
+        # enable_raytracing = rng.choice([True, False])
+        light = rng.choice(lightings)
 
         additional_env_build_kwargs = {
             # "shader_dir": "rt", # v100とかはray tracingに対応していない
@@ -473,7 +473,7 @@ def move_near_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, contr
     urdf_versions = [None, "recolor_tabletop_visual_matching_1", "recolor_tabletop_visual_matching_2", "recolor_cabinet_visual_matching_1"]
 
     for i in range(num_trials):
-        urdf = random.choice(urdf_versions)
+        urdf = rng.choice(urdf_versions)
         cfg = ManiSkill2Config(
             **base_kwargs,
             env_name="MoveNearGoogleBakedTexInScene-v0",
@@ -522,9 +522,9 @@ def move_near_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, control_f
     extras = [None, {"no_distractor": True}, {"slightly_darker_lighting": True}, {"slightly_brighter_lighting": True}]
 
     for i in range(num_trials):
-        env = random.choice(envs)
-        scene = random.choice(scenes)
-        extra = random.choice(extras)
+        env = rng.choice(envs)
+        scene = rng.choice(scenes)
+        extra = rng.choice(extras)
 
         cfg = ManiSkill2Config(
             **base_kwargs,
@@ -596,10 +596,10 @@ def put_in_drawer_visual_matching(env_policy: AiroaBasePolicy, ckpt_path: str, c
     ]
 
     for i in range(num_trials):
-        env_name = random.choice(env_names)
-        urdf = random.choice(urdf_versions)
-        pose = random.choice(overlay_poses)
-        model_id = random.choice(model_ids)
+        env_name = rng.choice(env_names)
+        urdf = rng.choice(urdf_versions)
+        pose = rng.choice(overlay_poses)
+        model_id = rng.choice(model_ids)
 
         additional_env_build_kwargs = {
             "station_name": "mk_station_recolor",
@@ -677,11 +677,11 @@ def put_in_drawer_variant_agg(env_policy: AiroaBasePolicy, ckpt_path: str, contr
     ]
 
     for i in range(num_trials):
-        env_name = random.choice(env_names)
-        scene = random.choice(background_scenes)
-        station = random.choice(stations)
-        light = random.choice(lightings)
-        model_id = random.choice(model_ids)
+        env_name = rng.choice(env_names)
+        scene = rng.choice(background_scenes)
+        station = rng.choice(stations)
+        light = rng.choice(lightings)
+        model_id = rng.choice(model_ids)
 
         additional_env_build_kwargs = {
             "model_ids": model_id,
@@ -714,10 +714,10 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, co
     print("=" * 80)
 
     # fix seed
-    random.seed(42)
-    np.random.seed(42)
+    random.seed(master_seed)
+    np.random.seed(master_seed)
 
-    num_trials = 3
+    num_trials = 30
     # vm_results: List[List[bool]] = []
     # sim_results: List[List[bool]] = []
 
