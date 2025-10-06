@@ -717,7 +717,7 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, co
     random.seed(master_seed)
     np.random.seed(master_seed)
 
-    num_trials = 3
+    num_trials = 30
     # vm_results: List[List[bool]] = []
     # sim_results: List[List[bool]] = []
 
