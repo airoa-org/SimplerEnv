@@ -1,6 +1,6 @@
 # SimplerEnv: Simulated Manipulation Policy Evaluation Environments for Real Robot Setups (Multi-model Support 🔥)
-## 実行手順
-- セットアップ
+## Execution Steps
+- Setup
 ```bash
 cd
 git clone -b group1/benchmark-v2 https://github.com/airoa-org/SimplerEnv.git --recursive
@@ -15,7 +15,7 @@ export AWS_ACCESS_KEY_ID=N4KTTON94TEH9R8TTOHG
 export AWS_SECRET_ACCESS_KEY=AbcBGwBbeNnYqGKmcza07kJ6mkeScAJ4TKhf8WPW
 aws s3 cp s3://airoa-fm-development-competition/group1/simplerenv/openpi0-bridge-lora/ weights/openpi/openpi0-bridge-lora --endpoint-url=https://s3.ap-northeast-1.wasabisys.com --recursive
 ```
-- ポリシーを起動
+- Start the Policy
 ```bash
 cd ~/SimplerEnv/openpi
 source ../scripts/openpi/.venv/bin/activate
@@ -23,13 +23,13 @@ export OPENPI_DATA_HOME="~/SimplerEnv/weights/openpi"
 export SERVER_ARGS="policy:checkpoint --policy.config=pi0_bridge_low_mem_finetune --policy.dir=../weights/openpi/openpi0-bridge-lora"
 python scripts/serve_policy.py $SERVER_ARGS
 ```
-- 評価実行（別ターミナル）
+- Run Evaluation (in a separate terminal)
 ```bash
 cd ~/SimplerEnv
 source scripts/openpi/.venv/bin/activate
 python scripts/openpi/challenge_widowx.py --ckpt weights/openpi/openpi0-bridge-lora --control-freq 5
 ```
-## レポジトリについて
+## About the Repository
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simpler-env/SimplerEnv/blob/main/example.ipynb)
 
 ![](./images/teaser.png)
