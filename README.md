@@ -11,8 +11,8 @@ GIT_LFS_SKIP_SMUDGE=1 uv pip install -e .
 cd ..
 uv pip install -e . ".[torch]"
 mkdir -p weights/openpi
-export AWS_ACCESS_KEY_ID=N4KTTON94TEH9R8TTOHG
-export AWS_SECRET_ACCESS_KEY=AbcBGwBbeNnYqGKmcza07kJ6mkeScAJ4TKhf8WPW
+export AWS_ACCESS_KEY_ID=<group1 access key>
+export AWS_SECRET_ACCESS_KEY=<group1 secret key>
 aws s3 cp s3://airoa-fm-development-competition/group1/simplerenv/openpi0-bridge-lora/ weights/openpi/openpi0-bridge-lora --endpoint-url=https://s3.ap-northeast-1.wasabisys.com --recursive
 ```
 - Start the Policy
