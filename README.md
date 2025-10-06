@@ -15,9 +15,11 @@ uv pip install -e . ".[torch]"
 ```bash
 source scripts/openpi/.venv/bin/activate
 mkdir -p weights/openpi
-aws s3 cp s3://airoa-fm-development-competition/bucket/group1/simplerenv/openpi0-bridge-lora weights/openpi/openpi0-bridge-lora --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
-cd openpi_Azuma413
-export OPENPI_DATA_HOME="~/SourceCode/SimplerEnv/weights/openpi"
+export AWS_ACCESS_KEY_ID=N4KTTON94TEH9R8TTOHG
+export AWS_SECRET_ACCESS_KEY=AbcBGwBbeNnYqGKmcza07kJ6mkeScAJ4TKhf8WPW
+aws s3 cp s3://airoa-fm-development-competition/group1/simplerenv/openpi0-bridge-lora weights/openpi/openpi0-bridge-lora --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+cd openpi
+export OPENPI_DATA_HOME="~/SimplerEnv/weights/openpi"
 export SERVER_ARGS="policy:checkpoint --policy.config=pi0_bridge_low_mem_finetune --policy.dir=../weights/openpi/openpi0-bridge-lora"
 uv run scripts/serve_policy.py $SERVER_ARGS
 ```
