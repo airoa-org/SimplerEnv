@@ -94,3 +94,47 @@ socket通信方式のため、tmux等を用いて複数プロセスを同時に�
 
 ### model path
     - s3://airoa-fm-development-competition/group4/simplerenv_checkpoints/
+
+
+
+
+
+# HPC意外での構築方法
+
+```bash
+
+git clone https://github.com/airoa-org/hsr_openpi.git -b feature/group4
+
+cd hsr_openpi
+git checkout feature/group4-
+
+uv venv -p 3.10 scripts/group4/.venv
+source $(pwd)/scripts/group4/.venv/bin/activate
+
+cd hsr_openpi
+GIT_LFS_SKIP_SMUDGE=1 UV_PROJECT_ENVIRONMENT=../scripts/group4/.venv uv sync
+GIT_LFS_SKIP_SMUDGE=1 uv pip install -e .
+
+cd ..
+uv pip install -e . ".[torch]"
+
+
+
+aws configure
+export AWS_ACCESS_KEY_ID=
+export AWS_SECRET_ACCESS_KEY=
+
+
+mkdir checkpoints/group4
+cd checkpoints/group4
+aws s3 ls s3://airoa-fm-development-competition/group4/ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+aws s3 cp s3://airoa-fm-development-competition/group4/simplerenv_checkpoints/ ./ --recursive --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+
+
+
+CUDA_VISIBLE_DEVICES=0 python ./scripts/group4/serve_policy.py --port 8000 --default_prompt "" policy:checkpoint --policy.config pi0_fractal_low_mem_finetune --policy.dir checkpoints/group4
+
+
+source $(pwd)/scripts/group4/.venv/bin/activate
+CUDA_VISIBLE_DEVICES=0 python ./scripts/openpi/evaluate_fractal2.py --ckpt-path checkpoints/group4
+```
