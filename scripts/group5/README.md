@@ -96,3 +96,49 @@ bash scripts/group5/eval_google_robot.sh
 ```
 
 > **Note:** Evaluation results, including logs and videos, will be saved under `{this_repo}/results`.
+
+
+
+
+```bash
+uv venv -p 3.10 scripts/group5/.venv
+
+source $(pwd)/scripts/group5/.venv/bin/activate
+
+
+uv pip install numpy==1.24.4
+cd ManiSkill2_real2sim
+uv pip install -e .
+cd ..
+uv pip install -e .
+
+
+
+cd geniac25_team5_codebase
+uv pip install -e .
+uv pip install rerun-sdk==0.23.1 bitsandbytes transformers==4.48.1 pytest
+uv pip install draccus==0.10.0
+
+# cd ..
+# uv pip install -e . ".[torch]"
+
+
+
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+unzip awscliv2.zip
+./aws/install
+
+export AWS_ACCESS_KEY_ID=
+export AWS_SECRET_ACCESS_KEY=
+
+aws s3 ls s3://airoa-fm-development-competition/group5/ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+aws s3 cp s3://airoa-fm-development-competition/group5/pi0-bridge_fractal ./ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+aws s3 cp s3://airoa-fm-development-competition/group5/pi0-bridge_fractal/ ./ --recursive --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+
+outputs/pi0-bridge/checkpoints/010000に移動
+
+bash scripts/group5/eval_fractal.sh
+```
+
+pi0-bridge_fractalに含まれているconfig.jsonから以下のキーを削除する必要があります。
+削除するキー：load_vlm_weights、vlm_model_name

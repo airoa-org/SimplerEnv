@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 # Lerobot-specific modules for policy construction and logging
+from dataclasses import asdict  # Convert dataclass instances to dictionaries
+import logging  # Logging utility
+from pprint import pformat  # Pretty-printing nested data structures
+
 from lerobot.common.logger import log_output_dir
-from lerobot.common.utils.utils import (
-    init_logging,          # Initialize logging configuration
-    set_global_seed,       # Set global random seed for reproducibility
-)
+from lerobot.common.utils.utils import init_logging  # Initialize logging configuration
+from lerobot.common.utils.utils import set_global_seed  # Set global random seed for reproducibility
+
 # Configuration parser and schema definition for evaluation pipeline
 from lerobot.configs import parser
 from lerobot.configs.eval import EvalPipelineConfig
 
 # Standard libraries and third-party packages
-import torch               # PyTorch for deep learning and tensor operations
-import logging             # Logging utility
-from pprint import pformat # Pretty-printing nested data structures
-from dataclasses import asdict # Convert dataclass instances to dictionaries
+import torch  # PyTorch for deep learning and tensor operations
 
-from simpler_env.evaluation.evaluate import run_comprehensive_evaluation
+from simpler_env.evaluation.fractal_tasks import run_comprehensive_evaluation
 from simpler_env.policies.group5.pi0 import Group5PiInference
+
 
 @parser.wrap()
 def main(cfg: EvalPipelineConfig) -> None:
@@ -54,7 +55,7 @@ def main(cfg: EvalPipelineConfig) -> None:
     # Ensure a pretrained model path is provided for evaluation
     assert cfg.policy.pretrained_path is not None, "Pretrained path must be specified for evaluation"
     logging.info(f"Using pretrained model for eval: {cfg.policy.pretrained_path}")
-    
+
     # Construct the policy (model)
     logging.info("Making policy...")
     policy = Group5PiInference(cfg)
@@ -65,6 +66,7 @@ def main(cfg: EvalPipelineConfig) -> None:
     logging.info("Evaluation finished.")
     logging.info(f"Final calculated scores: {scores}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     init_logging()
     main()
