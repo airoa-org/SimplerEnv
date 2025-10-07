@@ -157,9 +157,10 @@ def main():
 
     # Accumulators
     score_list = []
+    
     task_sum, task_cnt = defaultdict(float), defaultdict(int)
-    challenge_sum, challenge_cnt = defaultdict(float), defaultdict(int)
-    robot_sum, robot_cnt = defaultdict(float), defaultdict(int)
+    challenge_sum = defaultdict(lambda: defaultdict(float))
+    challenge_cnt = defaultdict(lambda: defaultdict(int))
 
     # Start scoring
     allowed_tasks = c1_tasks.union(set(c2_task2rubric.keys()))
@@ -195,10 +196,8 @@ def main():
                 # Accumulate
                 task_sum[task_name] += score
                 task_cnt[task_name] += 1
-                challenge_sum[ch_type] += score
-                challenge_cnt[ch_type] += 1
-                robot_sum[robot] += score
-                robot_cnt[robot] += 1
+                challenge_sum[robot][ch_type] += score
+                challenge_cnt[robot][ch_type] += 1
 
             continue
 
@@ -227,10 +226,8 @@ def main():
                 # Accumulate
                 task_sum[task_name] += score
                 task_cnt[task_name] += 1
-                challenge_sum[ch_type] += score
-                challenge_cnt[ch_type] += 1
-                robot_sum[robot] += score
-                robot_cnt[robot] += 1
+                challenge_sum[robot][ch_type] += score
+                challenge_cnt[robot][ch_type] += 1
 
             continue
 
@@ -245,7 +242,10 @@ def main():
     # Compute & Save metrics.json
     metrics = {
         "tasks": {},
-        "challenges": {},
+        "challenges": {
+            "widowx": {},
+            "google_robot": {},
+        },
         "robots": {},
     }
 
@@ -253,14 +253,22 @@ def main():
         mean = task_sum[t] / task_cnt[t] if task_cnt[t] else 0.0
         metrics["tasks"][t] = {"mean_score": round(mean, 6), "episodes": task_cnt[t]}
 
-    for ch in ["challenge_1", "challenge_2"]:
-        mean = challenge_sum[ch] / challenge_cnt[ch] if challenge_cnt[ch] else 0.0
-        metrics["challenges"][ch] = {"mean_score": round(mean, 6), "episodes": challenge_cnt[ch]}
+    for robot in ["widowx", "google_robot"]:
+        for ch in ["challenge_1", "challenge_2"]:
+            cnt = challenge_cnt[robot].get(ch, 0)
+            s = challenge_sum[robot].get(ch, 0.0)
+            mean = (s / cnt) if cnt > 0 else 0.0
+            metrics["challenges"][robot][ch] = {"mean_score": round(mean, 6), "episodes": cnt}
 
-    robots = ["widowx", "google_robot"] if policy == "both" else [policy]
-    for r in robots:
-        mean = robot_sum[r] / robot_cnt[r] if robot_cnt[r] else 0.0
-        metrics["robots"][r] = {"mean_score": round(mean, 6), "episodes": robot_cnt[r]}
+    for robot in ["widowx", "google_robot"] if policy == "both" else [policy]:
+        ch_means = []
+        for ch in ["challenge_1", "challenge_2"]:
+            cnt = metrics["challenges"][robot][ch]["episodes"]
+            mean = metrics["challenges"][robot][ch]["mean_score"]
+            if cnt > 0:
+                ch_means.append(mean)
+        robot_mean = sum(ch_means) / len(ch_means) if ch_means else 0.0
+        metrics["robots"][robot] = {"mean_score": round(robot_mean, 6)}
 
     with open(metrics_json, "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=4, ensure_ascii=False)
