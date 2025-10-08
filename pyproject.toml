@@ -10,7 +10,10 @@ dependencies = [
     "mediapy",
     "transforms3d",
     "matplotlib",
-    "statsmodels",
+    "setuptools>=80.9.0",
+    "openpi-client",
+    "awscli>=1.42.40",
+    "statsmodels>=0.14.5",
 ]
 
 
@@ -37,3 +40,4 @@ build-backend = "hatchling.build"
 
 [tool.uv.sources]
 mani_skill2_real2sim = { path = "ManiSkill2_real2sim", editable = true }
+openpi-client = { path = "openpi/packages/openpi-client", editable = true }

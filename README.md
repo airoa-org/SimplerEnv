@@ -1,5 +1,38 @@
 # SimplerEnv: Simulated Manipulation Policy Evaluation Environments for Real Robot Setups (Multi-model Support 🔥)
+## Execution Steps
+- Setup
+```bash
+cd
+git clone -b group1/benchmark-v2 https://github.com/airoa-org/SimplerEnv.git --recursive
+cd SimplerEnv/openpi
+GIT_LFS_SKIP_SMUDGE=1 UV_PROJECT_ENVIRONMENT=../scripts/openpi/.venv uv sync
+source ../scripts/openpi/.venv/bin/activate
+GIT_LFS_SKIP_SMUDGE=1 uv pip install -e .
+cd ..
+uv pip install -e . ".[torch]"
+mkdir -p weights/openpi
+export AWS_ACCESS_KEY_ID=<group1 access key>
+export AWS_SECRET_ACCESS_KEY=<group1 secret key>
+aws s3 cp s3://airoa-fm-development-competition/group1/simplerenv/openpi0-bridge-lora/ weights/openpi/openpi0-bridge-lora --endpoint-url=https://s3.ap-northeast-1.wasabisys.com --recursive
+```
+- Start the Policy
+```bash
+cd ~/SimplerEnv/openpi
+source ../scripts/openpi/.venv/bin/activate
+export OPENPI_DATA_HOME="~/SimplerEnv/weights/openpi"
+export SERVER_ARGS="policy:checkpoint --policy.config=pi0_bridge_low_mem_finetune --policy.dir=../weights/openpi/openpi0-bridge-lora"
+python scripts/serve_policy.py $SERVER_ARGS
+```
+- Run Evaluation (in a separate terminal)
+```bash
+cd ~/SimplerEnv
+source scripts/openpi/.venv/bin/activate
 
+python scripts/openpi/challenge_widowx.py --ckpt weights/openpi/openpi0-bridge-lora --control-freq 5
+# or
+python scripts/openpi/challenge_google_robot.py --ckpt weights/openpi/openpi0-bridge-lora --control-freq 5
+```
+## About the Repository
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simpler-env/SimplerEnv/blob/main/example.ipynb)
 
 ![](./images/teaser.png)
