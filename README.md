@@ -27,7 +27,10 @@ python scripts/serve_policy.py $SERVER_ARGS
 ```bash
 cd ~/SimplerEnv
 source scripts/openpi/.venv/bin/activate
+
 python scripts/openpi/challenge_widowx.py --ckpt weights/openpi/openpi0-bridge-lora --control-freq 5
+# or
+python scripts/openpi/challenge_google_robot.py --ckpt weights/openpi/openpi0-bridge-lora --control-freq 5
 ```
 ## About the Repository
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/simpler-env/SimplerEnv/blob/main/example.ipynb)
