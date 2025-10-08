@@ -132,10 +132,11 @@ export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
 
 aws s3 ls s3://airoa-fm-development-competition/group5/ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
-aws s3 cp s3://airoa-fm-development-competition/group5/pi0-bridge_fractal ./ --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
+#    PRE pi0-bridge_fractal/
+#    PRE pi0-hsr-all_04-08/
 aws s3 cp s3://airoa-fm-development-competition/group5/pi0-bridge_fractal/ ./ --recursive --endpoint-url=https://s3.ap-northeast-1.wasabisys.com
 
-outputs/pi0-bridge/checkpoints/010000に移動
+# outputs/pi0-bridge/checkpoints/010000に移動
 
 bash scripts/group5/eval_fractal.sh
 ```
