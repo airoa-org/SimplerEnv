@@ -14,9 +14,10 @@ from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_ob
 from simpler_env.utils.visualization import write_interval_video, write_video
 
 INF_COST = 999
-master_seed = 42
+master_seed = 3407
 rng = np.random.RandomState(master_seed)
 success_threshold_s = 5  # [s]
+
 
 def run_maniskill2_eval_single_episode(
     model,
