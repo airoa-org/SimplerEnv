@@ -137,4 +137,6 @@ CUDA_VISIBLE_DEVICES=0 python ./scripts/group4/serve_policy.py --port 8000 --def
 
 source $(pwd)/scripts/group4/.venv/bin/activate
 CUDA_VISIBLE_DEVICES=0 python ./scripts/openpi/evaluate_fractal2.py --ckpt-path checkpoints/group4
+
+CUDA_VISIBLE_DEVICES=0 python ./scripts/group4/evaluate_bridge.py --ckpt-path checkpoints/group4
 ```

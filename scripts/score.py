@@ -1,5 +1,5 @@
 import argparse
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 import csv
 import json
 import os
@@ -8,7 +8,7 @@ import os
 def parse_args():
     parser = argparse.ArgumentParser(description="Compute episode scores from results.json")
     parser.add_argument("--result-path", required=True, help="Directory that contains results.json and where scores.csv will be written")
-    parser.add_argument("--policy-setup", required=True, help="Policy setup string; must contain either 'widowx' or 'google_robot'")
+    parser.add_argument("--policy-setup", required=True, help="Policy setup string; Options: ['widowx', 'google_robot', 'both']")
     return parser.parse_args()
 
 
@@ -36,21 +36,82 @@ google_robot_put_in_rubrics_score = OrderedDict(
         ("has_contact", 0.4),
     ]
 )
-SCORING_CONFIG = {
+
+WIDOWX_TASKS = {
     "widowx": {
-        "widowx_task2_stack_cube": widowx_rubrics_score,
-        "widowx_task3_put_object_on_top": widowx_rubrics_score,
-        "widowx_task4_put_object_in_basket": widowx_rubrics_score,
-    },
+        "challenge_1": [
+            "widowx_task1_pick_object",
+        ],
+        "challenge_2": {
+            "widowx_task2_stack_cube": widowx_rubrics_score,
+            "widowx_task3_put_object_on_top": widowx_rubrics_score,
+            "widowx_task4_put_object_in_basket": widowx_rubrics_score,
+        },
+    }
+}
+
+GOOGLE_ROBOT_TASKS = {
     "google_robot": {
-        "fractal_move_near_visual_matching": google_robot_move_near_rubrics_score,
-        "fractal_move_near_variant_agg": google_robot_move_near_rubrics_score,
-        "fractal_put_in_drawer_visual_matching": google_robot_put_in_rubrics_score,
-        "fractal_put_in_drawer_variant_agg": google_robot_put_in_rubrics_score,
-    },
+        "challenge_1": [
+            "fractal_pick_object_visual_matching",
+            "fractal_pick_object_variant_agg",
+            "fractal_pick_object_among_visual_matching",
+            "fractal_pick_object_among_variant_agg",
+            "fractal_drawer_visual_matching",
+            "fractal_drawer_variant_agg",
+        ],
+        "challenge_2": {
+            "fractal_move_near_visual_matching": google_robot_move_near_rubrics_score,
+            "fractal_move_near_variant_agg": google_robot_move_near_rubrics_score,
+            "fractal_put_in_drawer_visual_matching": google_robot_put_in_rubrics_score,
+            "fractal_put_in_drawer_variant_agg": google_robot_put_in_rubrics_score,
+        },
+    }
 }
 
 
+# Build scoring config
+def build_scoring_config():
+    cfg = {}
+    cfg.update(WIDOWX_TASKS)
+    cfg.update(GOOGLE_ROBOT_TASKS)
+
+    wid = WIDOWX_TASKS["widowx"]
+    gr = GOOGLE_ROBOT_TASKS["google_robot"]
+    cfg["both"] = {
+        "challenge_1": list(wid["challenge_1"]) + list(gr["challenge_1"]),
+        "challenge_2": {**wid["challenge_2"], **gr["challenge_2"]},
+    }
+    return cfg
+
+
+SCORING_CONFIG = build_scoring_config()
+
+
+# Build reverse scoring config
+def build_reverse_maps():
+    robot_challenge_task = {
+        "widowx": {
+            "challenge_1": set(WIDOWX_TASKS["widowx"]["challenge_1"]),
+            "challenge_2": set(WIDOWX_TASKS["widowx"]["challenge_2"].keys()),
+        },
+        "google_robot": {
+            "challenge_1": set(GOOGLE_ROBOT_TASKS["google_robot"]["challenge_1"]),
+            "challenge_2": set(GOOGLE_ROBOT_TASKS["google_robot"]["challenge_2"].keys()),
+        },
+    }
+    task_to_robot_challenge = {}
+    for robot, ch_map in robot_challenge_task.items():
+        for ch, tasks in ch_map.items():
+            for t in tasks:
+                task_to_robot_challenge[t] = (robot, ch)
+    return task_to_robot_challenge, robot_challenge_task
+
+
+TASK_TO_ROBOT_CHALLENGE, ROBOT_CHALLENGE_TASK = build_reverse_maps()
+
+
+# Utils functions
 def ensure_weights_sum_to_one(weights: OrderedDict):
     total = sum(weights.values())
     if abs(total - 1.0) > 1e-9:
@@ -58,12 +119,23 @@ def ensure_weights_sum_to_one(weights: OrderedDict):
 
 
 def pick_policy(policy_setup: str) -> str:
-    s = policy_setup.lower()
-    if "widowx" in s:
-        return "widowx"
-    if "google_robot" in s:
-        return "google_robot"
-    return ValueError("`--policy-setup` must contain either 'widowx' or 'google_robot'.")
+    s = (policy_setup or "").strip().lower()
+    if s in ("widowx", "google_robot", "both"):
+        return s
+    raise ValueError("`--policy-setup` must be one of 'widowx', 'google_robot', or 'both'.")
+
+
+def load_results(json_file: str):
+    try:
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            data = [data]
+        if not isinstance(data, list):
+            data = []
+    except Exception:
+        data = []
+    return data
 
 
 def main():
@@ -71,58 +143,141 @@ def main():
 
     base_path = os.path.abspath(args.result_path)
     json_file = os.path.join(base_path, "results.json")
-    csv_file = os.path.join(base_path, "scores.csv")
+    scores_csv = os.path.join(base_path, "scores.csv")
+    metrics_json = os.path.join(base_path, "metrics.json")
 
+    # Set scoring config
     policy = pick_policy(args.policy_setup)
     scoring_config = SCORING_CONFIG[policy]
-    for rubrics_score in scoring_config.values():
-        ensure_weights_sum_to_one(rubrics_score)
+    c1_tasks = set(scoring_config.get("challenge_1", []))
+    c2_task2rubric = scoring_config.get("challenge_2", {})
+
+    for rubric in c2_task2rubric.values():
+        ensure_weights_sum_to_one(rubric)
 
     # Load json file
-    try:
-        with open(json_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if not isinstance(data, list):
-            data = []
-    except Exception:
-        data = []
+    data = load_results(json_file)
 
+    # Accumulators
     score_list = []
+
+    task_sum, task_cnt = defaultdict(float), defaultdict(int)
+    challenge_sum = defaultdict(lambda: defaultdict(float))
+    challenge_cnt = defaultdict(lambda: defaultdict(int))
+
+    # Start scoring
+    allowed_tasks = c1_tasks.union(set(c2_task2rubric.keys()))
     for task in data:
         task_name = task.get("task_name", "")
-        if task_name not in scoring_config.keys():
+        if task_name not in allowed_tasks:
             continue
-        trials = task.get("episodes", [])
-        for trial in trials:
-            trial_id = trial.get("trial_id")
-            episode_stats = trial.get("episode_stats", {})
-            # final_status = trial["final_status"]
-            score = 0.0
 
-            # Accumulate scores
-            rubrics_score = scoring_config[task_name]
-            for subtask in rubrics_score.keys():
-                status = episode_stats.get(subtask, {}).get("status", False)
-                if not status:
-                    break
-                score += rubrics_score[subtask]
+        # Get robot type and challenge type
+        robot, ch_type = TASK_TO_ROBOT_CHALLENGE.get(task_name, (None, None))
+        if robot is None or ch_type is None:
+            continue
 
-            cur_score_data = {
-                "task_name": task_name,
-                "trial_id": trial_id,
-                "score": score,
-            }
-            score_list.append(cur_score_data)
+        episodes = task.get("episodes", [])
 
-    # Export as csv file
+        # Challenge 1
+        if task_name in c1_tasks:
+            for trial in episodes:
+                trial_id = trial.get("trial_id")
+                final_status = str(trial.get("final_status", "")).lower()
+                success = final_status == "success"
+                score = 1.0 if success else 0.0
+
+                # Details
+                score_list.append(
+                    {
+                        "task_name": task_name,
+                        "trial_id": trial_id,
+                        "score": score,
+                    }
+                )
+
+                # Accumulate
+                task_sum[task_name] += score
+                task_cnt[task_name] += 1
+                challenge_sum[robot][ch_type] += score
+                challenge_cnt[robot][ch_type] += 1
+
+            continue
+
+        # Challenge 2
+        if task_name in c2_task2rubric:
+            rubrics_score = c2_task2rubric[task_name]
+            for trial in episodes:
+                trial_id = trial.get("trial_id")
+                episode_stats = trial.get("episode_stats", {})
+                score = 0.0
+                for subtask, weight in rubrics_score.items():
+                    status = episode_stats.get(subtask, {}).get("status", False)
+                    if not status:
+                        break
+                    score += weight
+
+                # Details
+                score_list.append(
+                    {
+                        "task_name": task_name,
+                        "trial_id": trial_id,
+                        "score": score,
+                    }
+                )
+
+                # Accumulate
+                task_sum[task_name] += score
+                task_cnt[task_name] += 1
+                challenge_sum[robot][ch_type] += score
+                challenge_cnt[robot][ch_type] += 1
+
+            continue
+
+    # Save scores.csv
     cols = ["task_name", "trial_id", "score"]
-    os.makedirs(os.path.dirname(csv_file), exist_ok=True)
-    with open(csv_file, "w", newline="", encoding="utf-8") as f:
+    os.makedirs(os.path.dirname(scores_csv), exist_ok=True)
+    with open(scores_csv, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=cols)
         writer.writeheader()
         writer.writerows(score_list)
 
-    print(f"Scores saved to {csv_file}, total {len(score_list)} rows.")
+    # Compute & Save metrics.json
+    metrics = {
+        "tasks": {},
+        "challenges": {
+            "widowx": {},
+            "google_robot": {},
+        },
+        "robots": {},
+    }
+
+    for t in sorted(task_sum.keys()):
+        mean = task_sum[t] / task_cnt[t] if task_cnt[t] else 0.0
+        metrics["tasks"][t] = {"mean_score": round(mean, 6), "episodes": task_cnt[t]}
+
+    for robot in ["widowx", "google_robot"]:
+        for ch in ["challenge_1", "challenge_2"]:
+            cnt = challenge_cnt[robot].get(ch, 0)
+            s = challenge_sum[robot].get(ch, 0.0)
+            mean = (s / cnt) if cnt > 0 else 0.0
+            metrics["challenges"][robot][ch] = {"mean_score": round(mean, 6), "episodes": cnt}
+
+    for robot in ["widowx", "google_robot"] if policy == "both" else [policy]:
+        ch_means = []
+        for ch in ["challenge_1", "challenge_2"]:
+            cnt = metrics["challenges"][robot][ch]["episodes"]
+            mean = metrics["challenges"][robot][ch]["mean_score"]
+            if cnt > 0:
+                ch_means.append(mean)
+        robot_mean = sum(ch_means) / len(ch_means) if ch_means else 0.0
+        metrics["robots"][robot] = {"mean_score": round(robot_mean, 6)}
+
+    with open(metrics_json, "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=4, ensure_ascii=False)
+
+    print(f"Scores saved to {scores_csv}, total {len(score_list)} rows.")
+    print(f"Metrics saved to {metrics_json}.")
 
 
 if __name__ == "__main__":
