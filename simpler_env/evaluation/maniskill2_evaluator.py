@@ -306,9 +306,10 @@ def _run_single_evaluation(model, args, control_mode, robot_init_x, robot_init_y
     elif args.obj_variation_mode == "episode":
         sampled_ids = rng.choice(range(36), size=args.obj_episode_range[1], replace=True)
         for idx, obj_episode_id in enumerate(sampled_ids):
-            if kwargs["episode_id"] is None:
-                kwargs["episode_id"] = idx
-            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs)
+            kwargs_copy = kwargs.copy()
+            if kwargs_copy["episode_id"] is None:
+                kwargs_copy["episode_id"] = idx
+            success = run_maniskill2_eval_single_episode(obj_episode_id=obj_episode_id, **kwargs_copy)
             success_arr.append(success)
 
     elif args.obj_variation_mode == "episode_xy":
