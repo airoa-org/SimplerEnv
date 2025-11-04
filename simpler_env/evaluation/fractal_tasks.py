@@ -714,10 +714,10 @@ def run_comprehensive_evaluation(env_policy: AiroaBasePolicy, ckpt_path: str, co
     print("=" * 80)
 
     # fix seed
-    random.seed(42)
-    np.random.seed(42)
+    random.seed(3407)
+    np.random.seed(3407)
 
-    num_trials = 3
+    num_trials = 30
     # vm_results: List[List[bool]] = []
     # sim_results: List[List[bool]] = []
 

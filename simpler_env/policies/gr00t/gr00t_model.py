@@ -35,7 +35,7 @@ class Gr00tInference:
         if policy_setup == "widowx_bridge":
             action_ensemble = False
             data_config = "widowx"
-            image_size = [256, 256]
+            image_size = [320, 256]
             self.sticky_gripper_num_repeat = 1
             # EE pose in Bridge data was relative to a top-down pose, instead of robot base
             self.default_rot = np.array([[0, 0, 1.0], [0, 1.0, 0], [-1.0, 0, 0]])  # https://github.com/rail-berkeley/bridge_data_robot/blob/b841131ecd512bafb303075bd8f8b677e0bf9f1f/widowx_envs/widowx_controller/src/widowx_controller/widowx_controller.py#L203
@@ -180,7 +180,7 @@ class Gr00tInference:
         if self.policy_setup == "widowx_bridge":
             state = self.preprocess_widowx_proprio(eef_pos)
             batch = {
-                "video.image_0": np.array(images[0][None]), # numpy (b h w c)
+                "video.image": np.array(images[0][None]), # numpy (b h w c)
                 "state.ee_pos": state[0:3][None],
                 "state.ee_rot": state[3:6][None],
                 "state.gripper": state[6:7][None],

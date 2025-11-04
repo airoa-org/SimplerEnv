@@ -968,7 +968,7 @@ class GoogleRobotDataConfig_chunk1(BaseDataConfig):
 
 
 class WidowXDataConfig_chunk1(BaseDataConfig):
-    video_keys = ["video.image_0"]
+    video_keys = ["video.image"]
     state_keys = ["state.ee_pos", "state.ee_rot", "state.gripper"]
     action_keys = ["action.delta_ee_pos", "action.delta_ee_rot", "action.gripper"]
     language_keys = ["annotation.human.task_description"]
