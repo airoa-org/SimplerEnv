@@ -1,0 +1,14 @@
+#!/bin/bash
+eval_type=pi0-bridge
+robot_type=widowx # google_robot # widowx
+ckpt=020000
+task="SimplerEnv"
+DATA_PATH=./outputs
+echo ${DATA_PATH}/${eval_type}/checkpoints/${ckpt}/pretrained_model
+
+python ./scripts/group5/evaluate_widowx.py \
+    --policy.path=${DATA_PATH}/${eval_type}/checkpoints/${ckpt}/pretrained_model \
+    --env.type=${robot_type} \
+    --env.task "${task}" \
+    --device=cuda \
+    --output_dir=./outputs/eval/${eval_type}
